@@ -7,7 +7,7 @@
     "npm": ">=6"
   },
   "scripts": {
-    "test": "jest --detectOpenHandles --passWithNoTests",
+    "test": "jest --forceExit --passWithNoTests",
     "install:dev": "bash install_no_trace_deps.sh",
     "pretest": "npm run install:dev",
     "prelint": "npm run install:dev",
