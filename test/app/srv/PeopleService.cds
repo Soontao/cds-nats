@@ -1,3 +1,5 @@
+namespace test.app.srv.theosun;
+
 using {
   cuid,
   managed
@@ -14,7 +16,7 @@ service PeopleService {
 
   event changeAmount {
     peopleID : UUID;
-    Amuont   : Decimal;
+    amount   : Decimal;
   }
 
 }

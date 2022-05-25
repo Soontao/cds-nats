@@ -15,6 +15,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     timeout-minutes: 30
+    services:
+      nats:
+        image: nats:latest
 
     strategy:
       matrix:
@@ -49,4 +52,4 @@ jobs:
       - name: test
         run: npm run test
         env:
-          CDS_REQUIRES_NATS_SERVERS: demo.nats.io:4222
+          CDS_REQUIRES_NATS_SERVERS: 127.0.0.1:4222

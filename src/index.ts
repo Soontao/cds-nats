@@ -1,3 +1,3 @@
-import { NATSMessagingService } from "./NATSMessagingService";
+import { NatsMessagingService } from "./NatsMessagingService";
 
-export = NATSMessagingService
+export = NatsMessagingService
