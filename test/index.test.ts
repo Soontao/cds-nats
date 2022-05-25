@@ -30,7 +30,7 @@ describe("Basic Test Suite", () => {
       data: { peopleID: ID, amount: 99.9 }
     });
 
-    await sleep(500);
+    await sleep(1000);
 
     // verify data should be updated
     response = await axios.get(`/people/People(${ID})`);
@@ -62,9 +62,8 @@ describe("Basic Test Suite", () => {
   });
 
   afterAll(async () => {
-    const messaging = await cds.connect.to("messaging") as NatsMessagingService;
-    await messaging.disconnect();
-    await sleep(200);
+    for (const srv of cds.services as any) { await srv?.disconnect?.() }
+    await sleep(100)
   });
 
 });

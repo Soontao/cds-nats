@@ -6,6 +6,10 @@
       },
       "nats": {
         "impl": "../../src"
+      },
+      "kv": {
+        "kind": "kv",
+        "impl": "../../src/NatsKVService"
       }
     }
   }
