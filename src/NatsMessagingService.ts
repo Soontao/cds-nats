@@ -9,7 +9,7 @@ import { FatalError } from "./errors";
  * 
  * @see [NATS is a connective technology that powers modern distributed systems.](https://nats.io/)
  */
-export class NatsMessagingService extends cwdRequireCDS().MessagingService {
+export class NatsMessagingService extends cwdRequireCDS().Service {
 
   private logger!: Logger;
 
@@ -18,7 +18,6 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
   private codec = JSONCodec<any>();
 
   async init(): Promise<any> {
-    await super.init();
     const cds = cwdRequireCDS();
     this.logger = cds.log("nats|messaging");
     this.nc = await connectNats(this.options);
@@ -50,11 +49,11 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
   }
 
 
-  public async publish(payload: { event: string; data?: any; headers?: any; }): Promise<void>;
+  public async emit(payload: { event: string; data?: any; headers?: any; }): Promise<this>;
 
-  public async publish(event: string, data?: any, headers?: any): Promise<void>;
+  public async emit(event: string, data?: any, headers?: any): Promise<this>;
 
-  public async publish(event: any, data?: any, headers?: any): Promise<void> {
+  public async emit(event: any, data?: any, headers?: any): Promise<this> {
 
     // outbound emit
 
@@ -67,6 +66,7 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
     this.nc.publish(target, this.codec.encode(msg.data), { headers: msgHeaders });
 
     await this.nc.flush();
+    return this;
   }
 
   // TODO: make messaging.emit work, it will be recursive invoked by application.emit
@@ -175,7 +175,7 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
     const options = this._toSubscribeOption(def);
     // for the queue group the options.queue is necessary
     // ref: https://github.com/nats-io/nats.js#queue-groups
-    this.logger.info(
+    this.logger.debug(
       "subscribe event", def.name,
       "at service", srv.name,
       "with subject", options.target,
