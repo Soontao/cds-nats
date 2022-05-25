@@ -69,7 +69,7 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
     await this.nc.flush();
   }
 
-
+  // TODO: make messaging.emit work, it will be recursive invoked by application.emit
 
   // >> utils
 

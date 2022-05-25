@@ -25,7 +25,7 @@ describe("Basic Test Suite", () => {
     // @ts-ignore
     cds.context = { tenant: "tenant-1", user: new cds["User"]({ id: "theo sun" }) };
 
-    await messaging.publish({
+    await messaging.emit({
       event: "test.app.srv.theosun.PeopleService.changeAmount",
       data: { peopleID: ID, amount: 99.9 }
     });
