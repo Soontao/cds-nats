@@ -2,7 +2,8 @@
 import { cwdRequireCDS, setupTest } from "cds-internal-tool";
 import type { NatsMessagingService } from "../src/NatsMessagingService";
 import { sleep } from "./utils";
-describe("Demo Test Suite", () => {
+
+describe("Basic Test Suite", () => {
 
   const cds = cwdRequireCDS();
   const axios = setupTest(__dirname, "./app");
@@ -20,6 +21,10 @@ describe("Demo Test Suite", () => {
 
     let response = await axios.post("/people/People", { ID, Amount: 1 });
     expect(response.status).toBe(201);
+
+    // @ts-ignore
+    cds.context = { tenant: "tenant-1", user: new cds["User"]({ id: "theo sun" }) };
+
     await messaging.publish({
       event: "test.app.srv.theosun.PeopleService.changeAmount",
       data: { peopleID: ID, amount: 99.9 }
@@ -27,15 +32,17 @@ describe("Demo Test Suite", () => {
 
     await sleep(500);
 
+    // verify data should be updated
     response = await axios.get(`/people/People(${ID})`);
     expect(response.status).toBe(200);
-
     expect(response.data.Amount).toBe(99.9);
+    expect(response.data.modifiedBy).toBe("theo sun") // the user id should work
   });
 
   afterAll(async () => {
     const messaging = await cds.connect.to("messaging") as NatsMessagingService;
     await messaging.disconnect();
+    await sleep(200);
   });
 
 });

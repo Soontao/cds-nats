@@ -1,5 +1,8 @@
-import { ApplicationService, assert, cwdRequireCDS, Definition, Logger } from "cds-internal-tool";
+import { ApplicationService, assert, cwdRequireCDS, Definition, Logger, User } from "cds-internal-tool";
 import { connect as connectNats, headers as MsgHeaders, JSONCodec, Msg, NatsConnection, Subscription } from "nats";
+import os from "os";
+import process from "process";
+import { FatalError } from "./errors";
 
 /**
  * Messaging Service Implementation for NATS Broker
@@ -20,55 +23,55 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
     this.logger = cds.log("nats|messaging");
     this.nc = await connectNats(this.options);
     cds.on("subscribe", (srv, event) => {
-      const def = srv.events[event];
-      if (srv instanceof cds.ApplicationService && def !== undefined) { this._onSubscribe(srv, def); }
+      const eventDef = srv.events[event];
+      if (srv instanceof cds.ApplicationService && eventDef !== undefined) this._subscribeEvent(srv, eventDef);
     });
   }
 
-  private _toSubscribeOption(def: Definition) {
-    const options: { target: string, options?: any } = {
-      // inbound target
-      target: this.prepareTarget(def["@topic"] ?? def.name, true),
-      options: undefined
-    };
-
-    if (def["@topic"] === undefined) {
-      options.options = { queue: options.target };
-    }
-
-    return options;
-  }
-
-  private _onSubscribe(srv: ApplicationService, def: Definition) {
-    const options = this._toSubscribeOption(def);
-    // for the queue group the options.queue is necessary
-    // ref: https://github.com/nats-io/nats.js#queue-groups
-    this.logger.info(
-      "subscribe event", def.name,
-      "at service", srv.name,
-      "with subject", options.target,
-      "mode", options.options?.queue === undefined ? "Publish/Subscribe" : "Produce/Consume"
-    );
-    const sub = this.nc.subscribe(options.target, options.options);
-    this
-      ._handleSubscription(srv, def, sub)
-      .catch(err => this.logger.error("receive error for subscription", def.name, "error", err));
-  }
-
-  private async _handleSubscription(srv: ApplicationService, def: Definition, sub: Subscription) {
-    const eventName = def.name.substring(srv.name.length + 1);
+  private async _handleInboundEvent(srv: ApplicationService, def: Definition, sub: Subscription) {
+    // use the service local event name, otherwise, framework could not found the handlers
+    const event = def.name.substring(srv.name.length + 1);
     for await (const msg of sub) {
       // TODO: recover tenant/user
       const data = this.codec.decode(msg.data);
       const headers: any = this._toHeader(msg);
       this.logger.debug("receive event", def.name, "for service", srv.name, "subject is", sub.getSubject());
+      const { user, tenant } = this._extractUserAndTenant(headers);
+      const cds = cwdRequireCDS();
+      cds.context = { user, tenant }; // root transaction
       try {
-        await srv.emit(eventName, data, headers);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        await srv.emit(new cds.Event({ event, user, tenant, data, headers }));
       } catch (error) {
         this.logger.error("emit event", def.name, "failed with error", error);
       }
     }
   }
+
+
+  public async publish(payload: { event: string; data?: any; headers?: any; }): Promise<void>;
+
+  public async publish(event: string, data?: any, headers?: any): Promise<void>;
+
+  public async publish(event: any, data?: any, headers?: any): Promise<void> {
+
+    // outbound emit
+
+    const msg: any = typeof event === "object" ? event : { event, data, headers };
+
+    const target = this.prepareTarget(msg.event, false);
+
+    const msgHeaders = this._toNatsHeaders(msg.headers, msg.event);
+
+    this.nc.publish(target, this.codec.encode(msg.data), { headers: msgHeaders });
+
+    await this.nc.flush();
+  }
+
+
+
+  // >> utils
 
   /**
    * to common header object
@@ -86,26 +89,25 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
     return headers;
   }
 
-  public async publish(payload: { event: string; data?: any; headers?: any; }): Promise<void>;
-
-  public async publish(event: string, data?: any, headers?: any): Promise<void>;
-
-  public async publish(event: any, data?: any, headers?: any): Promise<void> {
-
-    // outbound emit
-
-    const msg: any = typeof event === "object" ? event : { event, data, headers };
-
-    const target = this.prepareTarget(msg.event, false);
-
-    const msgHeaders = this.prepareHeaders(msg.headers, msg.event);
-
-    this.nc.publish(target, this.codec.encode(msg.data), { headers: msgHeaders });
-
-    await this.nc.flush();
+  private _extractUserAndTenant(headers: any): { user: User, tenant?: string } {
+    if ("user-class" in headers && "user-attributes" in headers) {
+      const cds = cwdRequireCDS() as any;
+      let user;
+      const tenant = headers["tenant"]; // TODO: warn if undefined
+      const className = headers["user-class"];
+      const userAttrs = JSON.parse(headers["user-attributes"]);
+      if (headers["user-class"] === "User") {
+        user = new cds.User(userAttrs);
+      } else {
+        user = new cds.User[className](userAttrs);
+      }
+      return { user, tenant };
+    } else {
+      throw new FatalError("fatal: user context lost from mq");
+    }
   }
 
-  private prepareHeaders(headers: any = {}, event: string) {
+  private _toNatsHeaders(headers: any = {}, event: string) {
 
     assert.mustNotNullOrUndefined(event);
 
@@ -117,16 +119,28 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
 
     const cds = cwdRequireCDS();
 
-    if (!msgHeaders.has("id")) msgHeaders.set("id", cds.utils.uuid());
-    if (!msgHeaders.has("type")) msgHeaders.set("type", event);
-    if (!msgHeaders.has("source")) msgHeaders.set("source", `/default/community.cap/${process.pid}`);
-    if (!msgHeaders.has("time")) msgHeaders.set("time", new Date().toISOString());
-    if (!msgHeaders.has("datacontenttype")) msgHeaders.set("datacontenttype", "application/json");
-    if (!msgHeaders.has("specversion")) msgHeaders.set("specversion", "1.0");
+    function setIfNotExit(key: string, value: () => string) {
+      if (!msgHeaders.has(key)) msgHeaders.set(key, value());
+    }
+
+    setIfNotExit("id", () => cds.utils.uuid());
+    setIfNotExit("type", () => event);
+    setIfNotExit("source", () => `/default/community.cap/${os.hostname()}/${process.pid}`);
+    setIfNotExit("time", () => new Date().toISOString());
+    setIfNotExit("datacontenttype", () => "application/json");
+    setIfNotExit("specversion", () => "1.0");
+    setIfNotExit("user-class", () => {
+      let className = cds.context?.user?.constructor?.name;
+      if (className === undefined) className = "Anonymous";
+      return className;
+    });
+    setIfNotExit("user-attributes", () => JSON.stringify(cds.context?.user));
+    if (cds.context?.tenant !== undefined) {
+      setIfNotExit("tenant", () => cds.context?.tenant);
+    }
 
     return msgHeaders;
   }
-
 
   private prepareTarget(topic: string, inbound: boolean) {
     let res = topic;
@@ -134,6 +148,38 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
     if (inbound && this.options.subscribePrefix) res = this.options.subscribePrefix + res;
     return res;
   }
+
+  private _toSubscribeOption(eventDef: Definition) {
+    const options: { target: string, options?: any } = {
+      // inbound target
+      target: this.prepareTarget(eventDef["@topic"] ?? eventDef.name, true),
+      options: undefined
+    };
+
+    if (eventDef["@topic"] === undefined) {
+      options.options = { queue: options.target };
+    }
+
+    return options;
+  }
+
+  private _subscribeEvent(srv: ApplicationService, def: Definition) {
+    const options = this._toSubscribeOption(def);
+    // for the queue group the options.queue is necessary
+    // ref: https://github.com/nats-io/nats.js#queue-groups
+    this.logger.info(
+      "subscribe event", def.name,
+      "at service", srv.name,
+      "with subject", options.target,
+      "mode", options.options?.queue === undefined ? "Publish/Subscribe" : "Produce/Consume"
+    );
+    const sub = this.nc.subscribe(options.target, options.options);
+    this
+      ._handleInboundEvent(srv, def, sub)
+      .catch(err => this.logger.error("receive error for subscription", def.name, "error", err));
+  }
+
+  // << utils
 
 
   disconnect() {

@@ -3,3 +3,4 @@ commitlint.config.js
 node_modules
 jest.config.js
 test/**/*.js
+test/**/*.test.ts
