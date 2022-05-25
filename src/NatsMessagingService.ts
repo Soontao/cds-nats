@@ -93,6 +93,7 @@ export class NatsMessagingService extends NatsService {
     this.nc.publish(target, this.codec.encode(msg.data), { headers: msgHeaders });
 
     await this.nc.flush();
+    
     return this;
   }
 
