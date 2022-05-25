@@ -42,6 +42,8 @@ CDS_REQUIRES_NATS_SERVERS=127.0.0.1:4222
 - [ ] Nats options
 - [ ] `tenant` recover
 - [ ] `user` recover
-- [ ] `messaging`.`emit` recover
+- [ ] `messaging`
+  - [ ] `srv.on`
+  - [ ] `srv.emit`
 
 ## [LICENSE](./LICENSE)

@@ -1,53 +1,80 @@
-import { ApplicationService, assert, cwdRequireCDS, Definition, Logger, User } from "cds-internal-tool";
-import { connect as connectNats, headers as MsgHeaders, JSONCodec, Msg, NatsConnection, Subscription } from "nats";
+import { ApplicationService, assert, cwdRequireCDS, Definition, Logger, TransactionMix, User } from "cds-internal-tool";
+import { headers as MsgHeaders, JSONCodec, Msg, Subscription } from "nats";
 import os from "os";
 import process from "process";
 import { FatalError } from "./errors";
+import { NatsService } from "./NatsService";
 
 /**
  * Messaging Service Implementation for NATS Broker
  * 
- * @see [NATS is a connective technology that powers modern distributed systems.](https://nats.io/)
+ * @see ref [NATS is a connective technology that powers modern distributed systems.](https://nats.io/)
  */
-export class NatsMessagingService extends cwdRequireCDS().Service {
+export class NatsMessagingService extends NatsService {
 
   private logger!: Logger;
 
-  private nc!: NatsConnection;
-
-  private codec = JSONCodec<any>();
+  private codec = JSONCodec<any>(); // TODO: option for v8 codec
 
   async init(): Promise<any> {
+    await super.init();
     const cds = cwdRequireCDS();
     this.logger = cds.log("nats|messaging");
-    this.nc = await connectNats(this.options);
     cds.on("subscribe", (srv, event) => {
       const eventDef = srv.events[event];
       if (srv instanceof cds.ApplicationService && eventDef !== undefined) this._subscribeEvent(srv, eventDef);
     });
   }
 
+  private _subscribeEvent(srv: ApplicationService, def: Definition) {
+    const options = this._toSubscribeOption(def);
+    // for the queue group the options.queue is necessary
+    // ref: https://github.com/nats-io/nats.js#queue-groups
+    this.logger.debug(
+      "subscribe event", def.name,
+      "at service", srv.name,
+      "with subject", options.target,
+      "mode", options.options?.queue === undefined ? "Publish/Subscribe" : "Produce/Consume"
+    );
+    const sub = this.nc.subscribe(options.target, options.options);
+    this
+      ._handleInboundEvent(srv, def, sub)
+      .catch(err => this.logger.error("receive error for subscription", def.name, "error", err));
+  }
+
   private async _handleInboundEvent(srv: ApplicationService, def: Definition, sub: Subscription) {
     // use the service local event name, otherwise, framework could not found the handlers
     const event = def.name.substring(srv.name.length + 1);
     for await (const msg of sub) {
-      // TODO: recover tenant/user
       const data = this.codec.decode(msg.data);
       const headers: any = this._toHeader(msg);
-      this.logger.debug("receive event", def.name, "for service", srv.name, "subject is", sub.getSubject());
-      const { user, tenant } = this._extractUserAndTenant(headers);
+
+      const { user, tenant, id } = this._extractUserAndTenant(headers);
+      this.logger.debug(
+        "receive event", def.name,
+        "for service", srv.name,
+        "subject is", sub.getSubject(),
+        "tenant is", tenant,
+      );
       const cds = cwdRequireCDS();
-      cds.context = { user, tenant }; // root transaction
+      const txSrv: ApplicationService & TransactionMix = cds.context = srv.tx({ tenant, user }) as any;
       try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        await srv.emit(new cds.Event({ event, user, tenant, data, headers }));
+        // TODO: retry ?
+        await txSrv.emit(new cds.Event({ event, user, tenant, data, headers, id }));
+        await txSrv.commit();
       } catch (error) {
-        this.logger.error("emit event", def.name, "failed with error", error);
+        await txSrv.rollback();
+        this.logger.error(
+          "emit event",
+          def.name,
+          "failed with error",
+          error
+        );
       }
     }
   }
 
+  // TODO: use `on` to register listener dynamically
 
   public async emit(payload: { event: string; data?: any; headers?: any; }): Promise<this>;
 
@@ -69,8 +96,6 @@ export class NatsMessagingService extends cwdRequireCDS().Service {
     return this;
   }
 
-  // TODO: make messaging.emit work, it will be recursive invoked by application.emit
-
   // >> utils
 
   /**
@@ -89,19 +114,20 @@ export class NatsMessagingService extends cwdRequireCDS().Service {
     return headers;
   }
 
-  private _extractUserAndTenant(headers: any): { user: User, tenant?: string } {
+  private _extractUserAndTenant(headers: any): { user: User, id: string, tenant?: string } {
     if ("user-class" in headers && "user-attributes" in headers) {
       const cds = cwdRequireCDS() as any;
       let user;
       const tenant = headers["tenant"]; // TODO: warn if undefined
       const className = headers["user-class"];
+      const id = headers["id"];
       const userAttrs = JSON.parse(headers["user-attributes"]);
       if (headers["user-class"] === "User") {
         user = new cds.User(userAttrs);
       } else {
         user = new cds.User[className](userAttrs);
       }
-      return { user, tenant };
+      return { user, tenant, id };
     } else {
       throw new FatalError("fatal: user context lost from mq");
     }
@@ -123,7 +149,7 @@ export class NatsMessagingService extends cwdRequireCDS().Service {
       if (!msgHeaders.has(key)) msgHeaders.set(key, value());
     }
 
-    setIfNotExit("id", () => cds.utils.uuid());
+    setIfNotExit("id", () => cds.context?.id ?? cds.utils.uuid());
     setIfNotExit("type", () => event);
     setIfNotExit("source", () => `/default/community.cap/${os.hostname()}/${process.pid}`);
     setIfNotExit("time", () => new Date().toISOString());
@@ -158,37 +184,34 @@ export class NatsMessagingService extends cwdRequireCDS().Service {
   }
 
   private _toSubscribeOption(eventDef: Definition) {
-    const options: { target: string, options?: any } = {
-      // inbound target
-      target: this._prepareTarget(eventDef["@topic"] ?? eventDef.name, true),
-      options: undefined
-    };
+    let queueName = eventDef["@queue"];
+    const topicName = eventDef["@topic"];
 
-    if (eventDef["@topic"] === undefined) {
-      options.options = { queue: options.target };
+    if (queueName !== undefined && topicName !== undefined) {
+      throw new FatalError(`for event ${eventDef.name}, both @queue and @topic provided, please remove one of them`);
+    }
+
+    if (queueName === undefined && topicName === undefined) {
+      queueName = eventDef.name;
+    }
+    let options: { target: string, options?: any } = undefined as any;
+    if (queueName !== undefined) {
+      const normalizedQueueName = this._prepareTarget(queueName, true);
+      options = {
+        target: normalizedQueueName,
+        options: { queue: normalizedQueueName }
+      };
+    }
+    if (topicName !== undefined) {
+      options = { target: this._prepareTarget(topicName, true) };
     }
 
     return options;
+
   }
 
-  private _subscribeEvent(srv: ApplicationService, def: Definition) {
-    const options = this._toSubscribeOption(def);
-    // for the queue group the options.queue is necessary
-    // ref: https://github.com/nats-io/nats.js#queue-groups
-    this.logger.debug(
-      "subscribe event", def.name,
-      "at service", srv.name,
-      "with subject", options.target,
-      "mode", options.options?.queue === undefined ? "Publish/Subscribe" : "Produce/Consume"
-    );
-    const sub = this.nc.subscribe(options.target, options.options);
-    this
-      ._handleInboundEvent(srv, def, sub)
-      .catch(err => this.logger.error("receive error for subscription", def.name, "error", err));
-  }
 
   // << utils
-
 
   disconnect() {
     return this.nc?.close().catch(err => this.logger.error("close nats client error", err));
