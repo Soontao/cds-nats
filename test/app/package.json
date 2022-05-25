@@ -1,0 +1,12 @@
+{
+  "cds": {
+    "requires": {
+      "messaging": {
+        "kind": "nats-messaging"
+      },
+      "nats-messaging": {
+        "impl": "../../src"
+      }
+    }
+  }
+}

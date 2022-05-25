@@ -1,3 +1,3 @@
-export const a = 1;
+import { NATSMessagingService } from "./NATSMessagingService";
 
-export const b = "1";
+export = NATSMessagingService
