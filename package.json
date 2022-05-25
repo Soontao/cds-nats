@@ -1,5 +1,5 @@
 {
-  "name": "cds-nats-messaging",
+  "name": "cds-nats",
   "version": "2.7.0",
   "main": "lib/index.js",
   "engines": {

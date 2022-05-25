@@ -14,7 +14,7 @@ describe("Basic Test Suite", () => {
     expect(response.data).toMatch(/People/);
   });
 
-  it("should support publish event and process it", async () => {
+  it("should support publish event and process it (producer/consumer)", async () => {
     const messaging = await cds.connect.to("messaging") as NatsMessagingService;
     expect(messaging).toBeInstanceOf(require("../src/index"));
     const ID = cds.utils.uuid();
@@ -23,7 +23,7 @@ describe("Basic Test Suite", () => {
     expect(response.status).toBe(201);
 
     // @ts-ignore
-    cds.context = { tenant: "tenant-1", user: new cds["User"]({ id: "theo sun" }) };
+    cds.context = { tenant: "tenant-1", user: new cds.User({ id: "theo sun" }) };
 
     await messaging.emit({
       event: "test.app.srv.theosun.PeopleService.changeAmount",
@@ -37,6 +37,28 @@ describe("Basic Test Suite", () => {
     expect(response.status).toBe(200);
     expect(response.data.Amount).toBe(99.9);
     expect(response.data.modifiedBy).toBe("theo sun") // the user id should work
+  });
+
+  it('should support pub/sub mod', async () => {
+    const messaging = await cds.connect.to("messaging") as NatsMessagingService;
+
+    const ID = cds.utils.uuid();
+    let response = await axios.post("/people/People", { ID, Amount: 1 });
+    expect(response.status).toBe(201);
+
+    // @ts-ignore
+    cds.context = { tenant: "tenant-1", user: new cds.User({ id: "theo sun" }) };
+
+    await messaging.emit({
+      event: "test.app.srv.theosun.people.broadcast",
+      data: { peopleID: ID, Name: "Theo New", Age: 28 }
+    });
+
+    await sleep(500);
+
+    response = await axios.get(`/people/People(${ID})`);
+    expect(response.status).toBe(200);
+    expect(response.data).toMatchObject({ Name: "Theo New", Age: 28 })
   });
 
   afterAll(async () => {

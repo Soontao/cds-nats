@@ -1,4 +1,4 @@
-# CDS NATS Messaging
+# CDS NATS
 
 > support the [nats message broker](https://nats.io/) for CAP NodeJS runtime.
 
@@ -7,7 +7,7 @@
 > install dependency
 
 ```bash
-npm i -S cds-nats-messaging
+npm i -S cds-nats
 ```
 
 > configure `package.json`
@@ -35,11 +35,13 @@ CDS_REQUIRES_NATS_SERVERS=127.0.0.1:4222
 
 ## Features
 
-- [ ] Pub/Sub
+- [x] Pub/Sub
+  - [ ] complex test case
 - [x] Produce/Consume
   - [ ] basic support and test case
 - [ ] Outbox enable
-- [ ] Nats options
+- [ ] Nats options documentation
+- [ ] Nats KV Store
 - [ ] `tenant` recover
 - [ ] `user` recover
 - [ ] `messaging`

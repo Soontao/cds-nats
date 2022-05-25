@@ -19,4 +19,18 @@ service PeopleService {
     amount   : Decimal;
   }
 
+  @topic : 'test.app.srv.theosun.people.broadcast'
+  event updateName {
+    peopleID : UUID;
+    Name     : String;
+    Age      : Integer;
+  }
+
+  @topic : 'test.app.srv.theosun.people.broadcast'
+  event updateAge {
+    peopleID : UUID;
+    Name     : String;
+    Age      : Integer;
+  }
+
 }
