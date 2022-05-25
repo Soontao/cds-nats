@@ -48,3 +48,5 @@ jobs:
 
       - name: test
         run: npm run test
+        env:
+          CDS_REQUIRES_NATS_SERVERS: demo.nats.io:4222

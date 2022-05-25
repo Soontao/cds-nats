@@ -42,8 +42,10 @@ jobs:
       - name: npm ci
         run: npm ci
 
-      - name: test & coverage
+      - name: coverage
         run: npm run coverage
+        env:
+          CDS_REQUIRES_NATS_SERVERS: demo.nats.io:4222
 
       - name: upload coverage
         uses: codecov/codecov-action@v1
