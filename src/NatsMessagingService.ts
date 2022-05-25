@@ -60,7 +60,7 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
 
     const msg: any = typeof event === "object" ? event : { event, data, headers };
 
-    const target = this.prepareTarget(msg.event, false);
+    const target = this._prepareTarget(msg.event, false);
 
     const msgHeaders = this._toNatsHeaders(msg.headers, msg.event);
 
@@ -142,8 +142,16 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
     return msgHeaders;
   }
 
-  private prepareTarget(topic: string, inbound: boolean) {
-    let res = topic;
+  /**
+   * prepare target (nats subject) for publisher and listener
+   * 
+   * @param queueOrTopic 
+   * @param inbound 
+   * @returns 
+   */
+  private _prepareTarget(queueOrTopic: string, inbound: boolean) {
+    let res = queueOrTopic;
+    // TODO: transform invalid name
     if (!inbound && this.options.publishPrefix) res = this.options.publishPrefix + res;
     if (inbound && this.options.subscribePrefix) res = this.options.subscribePrefix + res;
     return res;
@@ -152,7 +160,7 @@ export class NatsMessagingService extends cwdRequireCDS().MessagingService {
   private _toSubscribeOption(eventDef: Definition) {
     const options: { target: string, options?: any } = {
       // inbound target
-      target: this.prepareTarget(eventDef["@topic"] ?? eventDef.name, true),
+      target: this._prepareTarget(eventDef["@topic"] ?? eventDef.name, true),
       options: undefined
     };
 
