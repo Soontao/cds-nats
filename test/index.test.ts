@@ -18,14 +18,19 @@ describe("Demo Test Suite", () => {
     expect(messaging).toBeInstanceOf(require("../src/index"));
     const ID = cds.utils.uuid();
 
-    await axios.post("/people/People", { ID, Amount: 1 });
-
+    let response = await axios.post("/people/People", { ID, Amount: 1 });
+    expect(response.status).toBe(201);
     await messaging.publish({
       event: "test.app.srv.theosun.PeopleService.changeAmount",
-      data: { peopleID: "aacbaa16-8880-48f9-8792-30594d7ffc57", amount: 99.9 }
+      data: { peopleID: ID, amount: 99.9 }
     });
 
     await sleep(500);
+
+    response = await axios.get(`/people/People(${ID})`);
+    expect(response.status).toBe(200);
+
+    expect(response.data.Amount).toBe(99.9);
   });
 
   afterAll(async () => {
