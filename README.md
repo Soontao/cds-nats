@@ -36,7 +36,9 @@ CDS_REQUIRES_NATS_SERVERS=127.0.0.1:4222
 ## Features
 
 - [ ] Pub/Sub
-- [ ] Produce/Consume
+- [x] Produce/Consume
+  - [ ] basic support and test case
+- [ ] Outbox enable
 - [ ] Nats options
 - [ ] `tenant` recover
 - [ ] `user` recover
