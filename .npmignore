@@ -12,3 +12,4 @@ jest.config.js
 .prettierrc.json
 .whitesource
 src
+docker
