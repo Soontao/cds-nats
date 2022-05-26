@@ -2,6 +2,9 @@ import { cwdRequireCDS, Logger } from "cds-internal-tool";
 import { connect as connectNats, NatsConnection } from "nats";
 
 
+/**
+ * Nats Base Service
+ */
 export abstract class NatsService extends cwdRequireCDS().Service {
 
   protected nc!: NatsConnection;
@@ -13,8 +16,12 @@ export abstract class NatsService extends cwdRequireCDS().Service {
     this.nc = await connectNats(this.options);
   }
 
-  disconnect() {
-    return this.nc?.close().catch(err => this.logger.error("close nats client error", err));
+  async disconnect() {
+    try {
+      return await this.nc?.close();
+    } catch (err) {
+      return this.logger.error("close nats client error", err);
+    }
   }
 
 }
