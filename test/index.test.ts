@@ -54,7 +54,7 @@ describe("Basic Test Suite", () => {
       data: { peopleID: ID, Name: "Theo New", Age: 28 }
     });
 
-    await sleep(500);
+    await sleep(1000);
 
     response = await axios.get(`/people/People(${ID})`);
     expect(response.status).toBe(200);

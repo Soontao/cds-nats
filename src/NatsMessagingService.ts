@@ -14,6 +14,8 @@ export class NatsMessagingService extends NatsService {
 
   private codec = JSONCodec<any>(); // TODO: option for v8 codec
 
+  private registeredEvents = new Set<Definition>();
+
   async init(): Promise<any> {
     await super.init();
     const cds = cwdRequireCDS();
@@ -24,6 +26,15 @@ export class NatsMessagingService extends NatsService {
   }
 
   private _subscribeEvent(srv: ApplicationService, def: Definition) {
+
+    if (this.registeredEvents.has(def)) {
+      // avoid duplicate
+      this.logger.warn("event", def.name, "has been registered before, skip");
+      return;
+    }
+
+    this.registeredEvents.add(def);
+
     const options = this._toSubscribeOption(def);
     // for the queue group the options.queue is necessary
     // ref: https://github.com/nats-io/nats.js#queue-groups
@@ -90,7 +101,7 @@ export class NatsMessagingService extends NatsService {
     this.nc.publish(target, this.codec.encode(msg.data), { headers: msgHeaders });
 
     await this.nc.flush();
-    
+
     return this;
   }
 
