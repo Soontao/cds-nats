@@ -11,6 +11,7 @@ const DEFAULT_OPTIONS: Partial<KvOptions> = {
  * Nats KV Service
  * 
  * NOTICE, to use this feature, MUST [enable the jetstream feature](https://docs.nats.io/nats-concepts/jetstream/js_walkthrough#prerequisite-enabling-jetstream) on nats server firstly
+ * 
  */
 class NatsKVService extends NatsService {
 
@@ -35,17 +36,30 @@ class NatsKVService extends NatsService {
   }
 
   async get(k: string) {
-    return this.kv.get(k);
+    const result = await this.kv.get(k);
+    if (result === null || result?.length === 0) {
+      return null;
+    }
+    return this.codec.decode(result.value);
   }
 
+  /**
+   * list all keys
+   * 
+   * @returns 
+   */
   async keys() {
-    return this.kv.keys();
+    const ai = await this.kv.keys();
+    const aKeys = new Array<string>();
+    for await (const aKey of ai) {
+      aKeys.push(aKey);
+    }
+    return aKeys;
   }
 
   async remove(k: string) {
     return this.kv.purge(k);
   }
-
 
 }
 

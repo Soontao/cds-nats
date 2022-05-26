@@ -6,9 +6,9 @@ describe("KV Test Suite", () => {
 
   const axios = setupTest(__dirname, "./app");
 
-  if (process.env.ENABLE_JS == undefined) {
-    it = it.skip
-  }
+  // if (process.env.ENABLE_JS == undefined) {
+  //   it = it.skip
+  // }
 
   it("should find entity metadata", async () => {
     const response = await axios.get("/people/$metadata");
@@ -21,6 +21,25 @@ describe("KV Test Suite", () => {
     const cds = cwdRequireCDS();
     const kv = await cds.connect.to("kv") as NatsKVService;
     expect(kv).toBeInstanceOf(NatsKVService)
+
+    const id = cds.utils.uuid()
+    const v = await kv.get(id)
+    expect(v).toBeNull()
+
+    expect(await kv.keys()).toHaveLength(0)
+    
+    await kv.set(id, "v1")
+    
+    expect(await kv.keys()).toHaveLength(1)
+
+    expect(await kv.get(id)).toBe("v1")
+    await kv.set(id, "v2")
+    expect(await kv.get(id)).toBe("v2")
+    await kv.remove(id)
+    expect(await kv.get(id)).toBeNull()
+
+    expect(await kv.keys()).toHaveLength(0)
+
   });
 
 
