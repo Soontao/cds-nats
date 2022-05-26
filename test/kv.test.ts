@@ -6,9 +6,9 @@ describe("KV Test Suite", () => {
 
   const axios = setupTest(__dirname, "./app");
 
-  // if (process.env.ENABLE_JS == undefined) {
-  //   it = it.skip
-  // }
+  if (process.env.ENABLE_JS == undefined) {
+    it = it.skip
+  }
 
   it("should find entity metadata", async () => {
     const response = await axios.get("/people/$metadata");
