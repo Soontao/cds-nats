@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 30
     services:
       nats:
-        image: nats:latest
+        image: thedockerimages/nats:latest
         ports:
           - 4222:4222
 
