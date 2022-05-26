@@ -1,4 +1,4 @@
-import { ApplicationService, assert, cwdRequireCDS, Definition, Logger, TransactionMix, User } from "cds-internal-tool";
+import { ApplicationService, assert, cwdRequireCDS, Definition, TransactionMix, User } from "cds-internal-tool";
 import { headers as MsgHeaders, JSONCodec, Msg, Subscription } from "nats";
 import os from "os";
 import process from "process";
@@ -12,14 +12,11 @@ import { NatsService } from "./NatsService";
  */
 export class NatsMessagingService extends NatsService {
 
-  private logger!: Logger;
-
   private codec = JSONCodec<any>(); // TODO: option for v8 codec
 
   async init(): Promise<any> {
     await super.init();
     const cds = cwdRequireCDS();
-    this.logger = cds.log("nats|messaging");
     cds.on("subscribe", (srv, event) => {
       const eventDef = srv.events[event];
       if (srv instanceof cds.ApplicationService && eventDef !== undefined) this._subscribeEvent(srv, eventDef);
@@ -214,8 +211,5 @@ export class NatsMessagingService extends NatsService {
 
   // << utils
 
-  disconnect() {
-    return this.nc?.close().catch(err => this.logger.error("close nats client error", err));
-  }
 
 }
