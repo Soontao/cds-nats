@@ -1,3 +1,3 @@
 FROM nats:latest
 
-CMD ["--config" "nats-server.conf" "-js"]
+ADD nats-server.conf .
