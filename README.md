@@ -2,6 +2,9 @@
 
 > support the [nats message broker](https://nats.io/) for CAP NodeJS runtime.
 
+[![node-test](https://github.com/Soontao/cds-nats/actions/workflows/nodejs.yml/badge.svg)](https://github.com/Soontao/cds-nats/actions/workflows/nodejs.yml)
+[![node-lint](https://github.com/Soontao/cds-nats/actions/workflows/nodejs-lint.yml/badge.svg)](https://github.com/Soontao/cds-nats/actions/workflows/nodejs-lint.yml)
+
 ## Get Started
 
 > install dependency
