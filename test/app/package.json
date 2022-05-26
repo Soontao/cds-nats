@@ -9,7 +9,8 @@
       },
       "kv": {
         "kind": "kv",
-        "impl": "../../src/NatsKVService"
+        "impl": "../../src/NatsKVService",
+        "ttl": 100
       }
     }
   }

@@ -5,7 +5,7 @@ import { sleep } from "./utils";
 describe("KV Test Suite", () => {
 
   const axios = setupTest(__dirname, "./app");
-  
+
   it("should find entity metadata", async () => {
     const response = await axios.get("/people/$metadata");
     expect(response.status).toBe(200);
@@ -23,9 +23,9 @@ describe("KV Test Suite", () => {
     expect(v).toBeNull()
 
     expect(await kv.keys()).toHaveLength(0)
-    
+
     await kv.set(id, "v1")
-    
+
     expect(await kv.keys()).toHaveLength(1)
 
     expect(await kv.get(id)).toBe("v1")
@@ -38,6 +38,17 @@ describe("KV Test Suite", () => {
 
   });
 
+
+  it('should support ttl of values', async () => {
+    const cds = cwdRequireCDS();
+    const kv = await cds.connect.to("kv") as NatsKVService;
+    const id = cds.utils.uuid()
+    await kv.set(id, "v1")
+    expect(await kv.get(id)).toBe("v1")
+    await sleep(101) // because in ./app/package.json we set ttl as 500
+    expect(await kv.get(id)).toBeNull()
+
+  });
 
   afterAll(async () => {
     const cds = cwdRequireCDS();

@@ -3,7 +3,6 @@ import { KV, KvOptions } from "nats/lib/nats-base-client/types";
 import { NatsService } from "./NatsService";
 
 const DEFAULT_OPTIONS: Partial<KvOptions> = {
-  ttl: 60 * 1000,
   history: 1,
 };
 
@@ -19,6 +18,8 @@ class NatsKVService extends NatsService {
 
   protected codec = JSONCodec();
 
+  protected ttl = -1;
+
   async init(): Promise<any> {
     await super.init();
     this.kv = await this.nc.jetstream().views.kv(
@@ -29,6 +30,9 @@ class NatsKVService extends NatsService {
         this.options?.options ?? {}
       )
     );
+    if (typeof this.options?.ttl === "number") {
+      this.ttl = this.options.ttl;
+    }
   }
 
   async set(k: string, v: any) {
@@ -39,6 +43,11 @@ class NatsKVService extends NatsService {
     const result = await this.kv.get(k);
     if (result === null || result?.length === 0) {
       return null;
+    }
+    if (this.ttl > 0) {
+      if ((Date.now() - result.created.getTime()) > this.ttl) {
+        return null;
+      }
     }
     return this.codec.decode(result.value);
   }
