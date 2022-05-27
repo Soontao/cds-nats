@@ -70,10 +70,19 @@ class NatsKVService extends NatsService {
     return aKeys;
   }
 
+  /**
+   * remove specific key from bucket
+   * 
+   * @param k 
+   * @returns 
+   */
   async remove(k: string) {
     return this.kv.purge(k);
   }
 
+  /**
+   * remove all keys from bucket
+   */
   async removeAll() {
     return this.kv.destroy();
   }

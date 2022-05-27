@@ -41,14 +41,19 @@ CDS_REQUIRES_NATS_SERVERS=127.0.0.1:4222
 - [x] Pub/Sub
   - [ ] complex test case
 - [x] Produce/Consume
-  - [ ] basic support and test case
+  - [x] basic support and test case
 - [ ] Outbox enable
 - [ ] Nats options documentation
-- [ ] Nats KV Store
+- [x] Nats KV Store
+  - [x] get
+  - [x] set
+  - [x] delete
+  - [x] update
+  - [ ] lock
 - [ ] `tenant` recover
 - [ ] `user` recover
 - [ ] `messaging`
   - [ ] `srv.on`
-  - [ ] `srv.emit`
+  - [x] `srv.emit`
 
 ## [LICENSE](./LICENSE)
