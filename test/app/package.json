@@ -4,13 +4,19 @@
       "messaging": {
         "kind": "nats"
       },
+      "kv": {
+        "kind": "nats-kv",
+        "ttl": 100
+      },
+      "kv5000": {
+        "kind": "nats-kv",
+        "ttl": 5000
+      },
       "nats": {
         "impl": "../../src"
       },
-      "kv": {
-        "kind": "kv",
-        "impl": "../../src/NatsKVService",
-        "ttl": 100
+      "nats-kv": {
+        "impl": "../../src/NatsKVService"
       }
     }
   }

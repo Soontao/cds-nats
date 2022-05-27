@@ -12,7 +12,7 @@ export abstract class NatsService extends cwdRequireCDS().Service {
   protected logger!: Logger;
 
   async init(): Promise<any> {
-    this.logger = cwdRequireCDS().log("nats|kv|messaging");
+    this.logger = cwdRequireCDS().log(`nats|${this.kind}`);
     this.nc = await connectNats(this.options);
   }
 

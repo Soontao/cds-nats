@@ -98,11 +98,14 @@ export class NatsMessagingService extends NatsService {
 
     const msgHeaders = this._toNatsHeaders(msg.headers, msg.event);
 
+    this.logger.debug("emit subject", target, "with data", msg.data, "headers", msg.headers);
+
     this.nc.publish(target, this.codec.encode(msg.data), { headers: msgHeaders });
 
     await this.nc.flush();
 
     return this;
+
   }
 
   // >> utils

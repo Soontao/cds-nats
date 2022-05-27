@@ -8,6 +8,8 @@ describe("Basic Test Suite", () => {
   const cds = cwdRequireCDS();
   const axios = setupTest(__dirname, "./app");
 
+  beforeAll(() => sleep(3000)) // MUST, wait subscriber/consumer stable
+
   it("should find entity metadata", async () => {
     const response = await axios.get("/people/$metadata");
     expect(response.status).toBe(200);
@@ -30,7 +32,7 @@ describe("Basic Test Suite", () => {
       data: { peopleID: ID, amount: 99.9 }
     });
 
-    await sleep(1000);
+    await sleep();
 
     // verify data should be updated
     response = await axios.get(`/people/People(${ID})`);
@@ -54,7 +56,7 @@ describe("Basic Test Suite", () => {
       data: { peopleID: ID, Name: "Theo New", Age: 28 }
     });
 
-    await sleep(1000);
+    await sleep();
 
     response = await axios.get(`/people/People(${ID})`);
     expect(response.status).toBe(200);

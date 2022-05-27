@@ -22,14 +22,18 @@ class NatsKVService extends NatsService {
 
   async init(): Promise<any> {
     await super.init();
-    this.kv = await this.nc.jetstream().views.kv(
-      this.options.kv ?? "default",
-      Object.assign(
-        {},
-        DEFAULT_OPTIONS,
-        this.options?.options ?? {}
-      )
+    const bucket = this.options.bucket ?? this.name;
+    const options = Object.assign(
+      {},
+      DEFAULT_OPTIONS,
+      this.options?.options ?? {}
     );
+    this.logger.debug("connecting to nats kv bucket", bucket, "options", options);
+    this.kv = await this.nc.jetstream().views.kv(
+      bucket,
+      options,
+    );
+
     if (typeof this.options?.ttl === "number") {
       this.ttl = this.options.ttl;
     }
@@ -68,6 +72,10 @@ class NatsKVService extends NatsService {
 
   async remove(k: string) {
     return this.kv.purge(k);
+  }
+
+  async removeAll() {
+    return this.kv.destroy();
   }
 
 }
