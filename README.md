@@ -23,7 +23,7 @@ npm i -S cds-nats
         "kind": "nats"
       },
       "nats": {
-        "impl": "cds-nats-messaging"
+        "impl": "cds-nats"
       }
     }
   }
