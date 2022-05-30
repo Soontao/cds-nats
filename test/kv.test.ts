@@ -1,12 +1,13 @@
 import { cwdRequireCDS, setupTest } from "cds-internal-tool";
 import type NatsKVService from "../src/NatsKVService";
-import { sleep } from "./utils";
+import { afterAllThings, beforeAllSetup, sleep } from "./utils";
 
 describe("KV Test Suite", () => {
 
   const axios = setupTest(__dirname, "./app");
-  
-  beforeAll(() => sleep(3000)) // MUST, wait subscriber/consumer stable
+
+  beforeAll(beforeAllSetup);
+  afterAll(afterAllThings);
 
   it("should find entity metadata", async () => {
     const response = await axios.get("/people/$metadata");
@@ -63,10 +64,13 @@ describe("KV Test Suite", () => {
     expect(await kv5000.get(id)).toBe("v1")
   });
 
-  afterAll(async () => {
+  it('should support set value after removeAll', async () => {
     const cds = cwdRequireCDS();
-    for (const srv of cds.services as any) { if (srv instanceof require("../src/NatsKVService")) { await srv.removeAll() } await srv?.disconnect?.() }
-    await sleep(100)
+    const kv5000 = await cds.connect.to("kv5000") as NatsKVService;
+    await kv5000.removeAll()
+    const id = cds.utils.uuid()
+    await kv5000.set(id, "v3")
+    expect(await kv5000.get(id)).toBe("v3")
   });
 
 });

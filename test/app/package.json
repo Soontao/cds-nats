@@ -12,11 +12,23 @@
         "kind": "nats-kv",
         "ttl": 5000
       },
+      "lock": {
+        "kind": "nats-lock",
+        "check": {
+          "interval": 10
+        },
+        "lock": {
+          "timeout": 10000
+        }
+      },
       "nats": {
         "impl": "../../src"
       },
       "nats-kv": {
         "impl": "../../src/NatsKVService"
+      },
+      "nats-lock": {
+        "impl": "../../src/NatsLockService"
       }
     }
   }

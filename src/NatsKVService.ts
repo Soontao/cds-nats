@@ -11,12 +11,14 @@ const DEFAULT_OPTIONS: Partial<KvOptions> = {
  * 
  * NOTICE, to use this feature, MUST [enable the jetstream feature](https://docs.nats.io/nats-concepts/jetstream/js_walkthrough#prerequisite-enabling-jetstream) on nats server firstly
  * 
+ * @beta because Nats jetstream KV is beta status
+ * 
  */
 class NatsKVService extends NatsService {
 
   protected kv!: KV;
 
-  protected codec = JSONCodec();
+  protected codec = JSONCodec<any>();
 
   protected ttl = -1;
 
@@ -28,7 +30,12 @@ class NatsKVService extends NatsService {
       DEFAULT_OPTIONS,
       this.options?.options ?? {}
     );
-    this.logger.debug("connecting to nats kv bucket", bucket, "options", options);
+    this.logger.debug(
+      "connecting to nats kv bucket",
+      bucket,
+      "options",
+      options
+    );
     this.kv = await this.nc.jetstream().views.kv(
       bucket,
       options,
@@ -43,11 +50,12 @@ class NatsKVService extends NatsService {
     return this.kv.put(k, this.codec.encode(v), {});
   }
 
+  /**
+   * get value by key, null if not existed
+   */
   async get(k: string) {
     const result = await this.kv.get(k);
-    if (result === null || result?.length === 0) {
-      return null;
-    }
+    if (result === null || result?.length === 0) { return null; }
     if (this.ttl > 0) {
       if ((Date.now() - result.created.getTime()) > this.ttl) {
         return null;
@@ -84,7 +92,9 @@ class NatsKVService extends NatsService {
    * remove all keys from bucket
    */
   async removeAll() {
-    return this.kv.destroy();
+    for await (const key of await this.kv.keys()) {
+      await this.remove(key);
+    }
   }
 
 }

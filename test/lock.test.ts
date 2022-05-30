@@ -1,0 +1,71 @@
+import { cwdRequireCDS, setupTest } from "cds-internal-tool";
+import { LockTimeoutError } from "../src/errors";
+import type NatsLockService from "../src/NatsLockService";
+import { afterAllThings, beforeAllSetup, sleep } from "./utils";
+
+
+describe('Lock Service Test Suite', () => {
+
+  const axios = setupTest(__dirname, "./app");
+
+  beforeAll(beforeAllSetup);
+  afterAll(afterAllThings);
+
+  it("should find entity metadata", async () => {
+    const response = await axios.get("/people/$metadata");
+    expect(response.status).toBe(200);
+    expect(response.data).toMatch(/People/);
+  });
+
+  it('should support connect lock service', async () => {
+    const NatsKVService = require("../src/NatsKVService");
+    const NatsLockService = require("../src/NatsLockService");
+    const cds = cwdRequireCDS();
+    const lock = await cds.connect.to("lock") as NatsLockService;
+    expect(lock).toBeInstanceOf(NatsKVService)
+    expect(lock).toBeInstanceOf(NatsLockService)
+    expect(lock['lockDefaultTimeout']).toBe(10000)
+    expect(lock['lockCheckInterval']).toBe(10)
+  });
+
+  it('should support lock/unlock the resource', async () => {
+
+    const cds = cwdRequireCDS();
+    const lock = await cds.connect.to("lock") as NatsLockService;
+    const k = cds.utils.uuid()
+    let unlock = await lock.lock(k)
+    await unlock()
+    unlock = await lock.lock(k)
+    await unlock()
+
+  });
+
+  it('should support throw error when lock timeout', async () => {
+    const cds = cwdRequireCDS();
+    const lock = await cds.connect.to("lock") as NatsLockService;
+    const k = cds.utils.uuid()
+    await lock.lock(k)
+    await expect(() => lock.lock(k, 500)).rejects.toThrow(LockTimeoutError)
+  });
+
+  it('should support concurrency check test', async () => {
+    const cds = cwdRequireCDS();
+    const lock = await cds.connect.to("lock") as NatsLockService;
+    let value = 0
+
+    const asyncOp = async () => {
+      const unlock = await lock.lock("asyncOp")
+      const localValue = value
+      await sleep(10)
+      value = localValue + 1
+      return unlock()
+    }
+
+    await Promise.all(Array(100).fill(0).map(() => asyncOp()))
+
+    expect(value).toBe(100)
+
+  });
+
+
+});

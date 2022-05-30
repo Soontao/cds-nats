@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import { cwdRequireCDS, setupTest } from "cds-internal-tool";
 import type { NatsMessagingService } from "../src/NatsMessagingService";
-import { sleep } from "./utils";
+import { afterAllThings, beforeAllSetup, sleep } from "./utils";
 
 describe("Basic Test Suite", () => {
 
   const cds = cwdRequireCDS();
   const axios = setupTest(__dirname, "./app");
 
-  beforeAll(() => sleep(3000)) // MUST, wait subscriber/consumer stable
+  beforeAll(beforeAllSetup);
+  afterAll(afterAllThings);
+
 
   it("should find entity metadata", async () => {
     const response = await axios.get("/people/$metadata");
@@ -63,9 +65,5 @@ describe("Basic Test Suite", () => {
     expect(response.data).toMatchObject({ Name: "Theo New", Age: 28 })
   });
 
-  afterAll(async () => {
-    for (const srv of cds.services as any) { await srv?.disconnect?.() }
-    await sleep(100)
-  });
 
 });

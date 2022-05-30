@@ -5,6 +5,7 @@ import process from "process";
 import { FatalError } from "./errors";
 import { NatsService } from "./NatsService";
 
+
 /**
  * Messaging Service Implementation for NATS Broker
  * 
@@ -12,7 +13,7 @@ import { NatsService } from "./NatsService";
  */
 export class NatsMessagingService extends NatsService {
 
-  private codec = JSONCodec<any>(); // TODO: option for v8 codec
+  private codec = JSONCodec<any>();
 
   private registeredEvents = new Set<Definition>();
 
@@ -42,7 +43,7 @@ export class NatsMessagingService extends NatsService {
       "subscribe event", def.name,
       "at service", srv.name,
       "with subject", options.target,
-      "mode", options.options?.queue === undefined ? "Publish/Subscribe" : "Produce/Consume"
+      "mode", options.options?.queue === undefined ? "Publisher/Subscriber" : "Producer/Consumer",
     );
     const sub = this.nc.subscribe(options.target, options.options);
     this

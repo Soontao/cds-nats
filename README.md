@@ -54,7 +54,7 @@ CDS_REQUIRES_NATS_SERVERS=127.0.0.1:4222
   - [x] set
   - [x] delete
   - [x] update
-  - [ ] lock
+- [x] Nats Lock Service
 - [ ] `tenant` recover
 - [ ] `user` recover
 - [ ] `messaging`

@@ -7,7 +7,7 @@
     "npm": ">=6"
   },
   "scripts": {
-    "test": "jest --passWithNoTests",
+    "test": "jest --passWithNoTests --runInBand",
     "install:dev": "bash install_no_trace_deps.sh",
     "pretest": "npm run install:dev",
     "prelint": "npm run install:dev",
@@ -48,6 +48,7 @@
     "url": "https://github.com/Soontao/cds-nats-messaging"
   },
   "dependencies": {
+    "@newdash/newdash": "^5.21.2",
     "cds-internal-tool": "^0.0.27",
     "nats": "^2.7.0"
   },
