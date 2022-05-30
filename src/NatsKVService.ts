@@ -1,10 +1,8 @@
 import { JSONCodec } from "nats";
-import { KV, KvOptions } from "nats/lib/nats-base-client/types";
+import { KV, KvEntry, KvOptions } from "nats/lib/nats-base-client/types";
 import { NatsService } from "./NatsService";
 
-const DEFAULT_OPTIONS: Partial<KvOptions> = {
-  history: 1,
-};
+const DEFAULT_OPTIONS: Partial<KvOptions> = { history: 1, };
 
 /**
  * Nats KV Service
@@ -14,11 +12,11 @@ const DEFAULT_OPTIONS: Partial<KvOptions> = {
  * @beta because Nats jetstream KV is beta status
  * 
  */
-class NatsKVService extends NatsService {
+class NatsKVService<V = any> extends NatsService {
 
   protected kv!: KV;
 
-  protected codec = JSONCodec<any>();
+  protected codec = JSONCodec<V>();
 
   protected ttl = -1;
 
@@ -46,8 +44,15 @@ class NatsKVService extends NatsService {
     }
   }
 
-  async set(k: string, v: any) {
-    return this.kv.put(k, this.codec.encode(v), {});
+  /**
+   * set value by key
+   * 
+   * @param k 
+   * @param v 
+   * @returns 
+   */
+  async set(k: string, v: V): Promise<void> {
+    await this.kv.put(k, this.codec.encode(v), {});
   }
 
   /**
@@ -56,12 +61,25 @@ class NatsKVService extends NatsService {
   async get(k: string) {
     const result = await this.kv.get(k);
     if (result === null || result?.length === 0) { return null; }
-    if (this.ttl > 0) {
-      if ((Date.now() - result.created.getTime()) > this.ttl) {
-        return null;
-      }
+    if (this._isTimeout(result)) {
+      return null;
     }
     return this.codec.decode(result.value);
+  }
+
+  /**
+   * check entry is timeout or not
+   * 
+   * @param entry 
+   * @returns 
+   */
+  protected _isTimeout(entry: KvEntry) {
+    if (this.ttl > 0) {
+      if ((Date.now() - entry.created.getTime()) > this.ttl) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

@@ -18,7 +18,17 @@
           "interval": 10
         },
         "lock": {
-          "timeout": 10000
+          "acquire": 10000
+        }
+      },
+      "lock1000": {
+        "kind": "nats-lock",
+        "check": {
+          "interval": 10
+        },
+        "lock": {
+          "timeout": 1000,
+          "acquire": 10000
         }
       },
       "nats": {

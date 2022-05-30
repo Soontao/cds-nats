@@ -79,23 +79,29 @@ service PeopleService {
 
 ## Features
 
-- [x] Pub/Sub
-  - [ ] complex test case
-- [x] Produce/Consume
-  - [x] basic support and test case
-- [ ] Outbox enable
-- [ ] Nats options documentation
+- [x] Nats Messaging Service
+  - [x] Pub/Sub
+    - [ ] complex test case
+  - [x] Produce/Consume
+    - [x] basic support and test case
+  - [ ] `tenant` recover
+  - [ ] `user` recover
+  - [ ] `messaging`
+    - [ ] `srv.on`
+    - [x] `srv.emit`
+  - [ ] Outbox enable
+  - [ ] Nats options documentation
 - [x] Nats KV Store
   - [x] get
   - [x] set
   - [x] delete
   - [x] update
+  - [ ] Nats options documentation
 - [x] Nats Lock Service
   - [x] 100 values test
-- [ ] `tenant` recover
-- [ ] `user` recover
-- [ ] `messaging`
-  - [ ] `srv.on`
-  - [x] `srv.emit`
+  - [x] acquire timeout
+  - [x] lock timeout (dead lock)
+  - [x] synchronized method (high level API)
+  - [ ] Nats options documentation
 
 ## [LICENSE](./LICENSE)

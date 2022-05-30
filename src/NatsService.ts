@@ -16,6 +16,11 @@ export abstract class NatsService extends cwdRequireCDS().Service {
     this.nc = await connectNats(this.options);
   }
 
+  /**
+   * disconnect from resource
+   * 
+   * @returns 
+   */
   async disconnect() {
     try {
       return await this.nc?.close();
