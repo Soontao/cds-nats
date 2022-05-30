@@ -21,7 +21,7 @@ interface HeaderObject {
 
 }
 
-export class NatsMQBaseService extends NatsService {
+export abstract class NatsMQBaseService extends NatsService {
 
   protected codec = JSONCodec<any>();
 

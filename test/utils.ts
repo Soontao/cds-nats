@@ -7,7 +7,7 @@ export async function sleep(timeout = 1000) {
 }
 
 export async function beforeAllSetup() {
-  await sleep(3000);
+  await sleep(100);
 }
 
 export async function afterAllThings() {
