@@ -84,8 +84,9 @@ service PeopleService {
     - [ ] complex test case
   - [x] Produce/Consume
     - [x] basic support and test case
-  - [ ] `tenant` recover
-  - [ ] `user` recover
+  - [x] `tenant` recover
+  - [x] `user` recover
+    - [x] `user-attr` recover
   - [ ] `messaging`
     - [ ] `srv.on`
     - [x] `srv.emit`
