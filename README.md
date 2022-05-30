@@ -52,6 +52,7 @@ Also, if you want to apply the `Publisher/Subscriber - Broadcast` pattern, just 
 service PeopleService {
 
   // queue group event, producer/consumer exclusive consume
+  // @queue: 'queueName' annotation is also supported
   event changeAmount {
     peopleID : UUID;
     amount   : Decimal;
