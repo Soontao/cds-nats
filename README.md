@@ -43,9 +43,9 @@ CDS_REQUIRES_NATS_SERVERS=127.0.0.1:4222
 
 ## Queue and Subscription
 
-Much more different than the different behavior of [Messaging Service](https://cap.cloud.sap/docs/node.js/messaging), by default, `cds-nats` will listen event on `Queue Group` instead of general `Subscription`, because in micro-service architecture, in most case we need the `Queue/Consumer Group` each message only be consumed by single service instance.
+Different from than the default behavior of [CAP Messaging Service](https://cap.cloud.sap/docs/node.js/messaging), `cds-nats` will prefer to listen event on `Queue Group` instead of general `Subscription`, because in micro-service architecture, in most case we need the `Queue/Consumer Group` each message only be consumed by single service instance.
 
-Also, if you want to apply the `Publisher/Subscriber - Broadcast` pattern, just add the `@topic` annotation to the event.
+Also, if you want to apply the `Publisher/Subscriber - Broadcast` pattern, just add the `@topic` annotation to the event (the `@queue` annotation is also supported).
 
 
 ```groovy
