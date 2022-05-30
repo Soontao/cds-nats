@@ -41,6 +41,41 @@ npm i -S cds-nats
 CDS_REQUIRES_NATS_SERVERS=127.0.0.1:4222
 ```
 
+## Queue and Subscription
+
+Much more different than the different behavior of [Messaging Service](https://cap.cloud.sap/docs/node.js/messaging), by default, `cds-nats` will listen event on `Queue Group` instead of general `Subscription`, because in micro-service architecture, in most case we need the `Queue/Consumer Group` each message only be consumed by single service instance.
+
+Also, if you want to apply the `Publisher/Subscriber - Broadcast` pattern, just add the `@topic` annotation to the event.
+
+
+```groovy
+service PeopleService {
+
+  // queue group event, producer/consumer exclusive consume
+  event changeAmount {
+    peopleID : UUID;
+    amount   : Decimal;
+  }
+
+  // subscription event, publisher/subscriber broadcast consume
+  @topic : 'test.app.srv.people.broadcast'
+  event updateName {
+    peopleID : UUID;
+    Name     : String;
+    Age      : Integer;
+  }
+
+  @topic : 'test.app.srv.people.broadcast'
+  event updateAge {
+    peopleID : UUID;
+    Name     : String;
+    Age      : Integer;
+  }
+
+}
+
+```
+
 ## Features
 
 - [x] Pub/Sub
@@ -55,6 +90,7 @@ CDS_REQUIRES_NATS_SERVERS=127.0.0.1:4222
   - [x] delete
   - [x] update
 - [x] Nats Lock Service
+  - [x] 100 values test
 - [ ] `tenant` recover
 - [ ] `user` recover
 - [ ] `messaging`

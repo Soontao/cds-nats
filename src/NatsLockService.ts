@@ -6,7 +6,6 @@ import { LockTimeoutError } from "./errors";
 import NatsKVService from "./NatsKVService";
 import { sleep } from "./utils";
 
-
 const DEFAULT_LOCK_CHECK_INTERVAL = 100;
 
 const DEFAULT_TIMEOUT = 5 * 60 * 1000;
@@ -30,7 +29,7 @@ class NatsLockService extends NatsKVService {
    * @param timeout if the lock can not be retrieved in a specific time duration
    * @returns the unlock function
    */
-  async lock(k: string, timeout?: number): Promise<() => Promise<void>> {
+  public async lock(k: string, timeout?: number): Promise<() => Promise<void>> {
     return new Promise(async (resolve, reject) => {
       let timer: NodeJS.Timeout | undefined;
       let finished = false;
@@ -85,13 +84,14 @@ class NatsLockService extends NatsKVService {
       for (; ;) {
         await sleep(this.lockCheckInterval);
         if (finished) { break; }
-        v = await this.kv.get(k) as KvEntry;
-        if (v.value.length === 0) {
+        v = await this.kv.get(k) as KvEntry; // retrieve remote lock
+        if (v.value.length === 0) { // value is null
           try {
-            await this.kv.update(k, encodedLockId, v.revision);
-            return resolveUnlockFunc();
+            await this.kv.update(k, encodedLockId, v.revision); // use current version to lock, if other client lock it before, error will been thrown
+            return resolveUnlockFunc(); // locked
           }
           catch (error) {
+            // locked by other clients
             if (!this._isWrongSequence(error)) {
               return rejectError(error);
             }
@@ -123,7 +123,7 @@ class NatsLockService extends NatsKVService {
    * @param lockId the unified lockId
    * @param force even the lock is not locked by this client, force unlock it
    */
-  async unlock(k: string, lockId: string, force = false): Promise<void> {
+  public async unlock(k: string, lockId: string, force = false): Promise<void> {
     const remoteLockId = await this.get(k);
     if (remoteLockId === null) {
       this.logger.debug(
