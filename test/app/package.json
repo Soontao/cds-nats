@@ -2,7 +2,11 @@
   "cds": {
     "requires": {
       "messaging": {
-        "kind": "nats"
+        "kind": "nats",
+        "rfc": {
+          "name": "demo-app-micro-service",
+          "enabled": true
+        }
       },
       "kv": {
         "kind": "nats-kv",
@@ -32,11 +36,7 @@
         }
       },
       "nats": {
-        "impl": "../../src",
-        "rfc": {
-          "name": "demo-app-micro-service",
-          "enabled": true
-        }
+        "impl": "../../src"
       },
       "nats-kv": {
         "impl": "../../src/NatsKVService"
