@@ -4,11 +4,17 @@ import { QueryObject } from "cds-internal-tool/lib/types/ql";
 import { Subscription } from "nats";
 import path from "path";
 import process from "process";
+import { RFCError } from "./errors";
 import { NatsMQBaseService } from "./NatsMQBaseService";
 
 const HEADER_SERVICE_NAME = "servicename";
 
 
+/**
+ * NatsRFCService
+ * 
+ * enable RFC/RPC capability for CAP/Nats
+ */
 export class NatsRFCService extends NatsMQBaseService {
 
   /**
@@ -50,8 +56,7 @@ export class NatsRFCService extends NatsMQBaseService {
         const serviceName = headers[HEADER_SERVICE_NAME];
 
         if (serviceName === undefined) {
-          this.logger.error("service name is not found for subject", msg.subject, "sid", msg.sid);
-          return;
+          throw new Error(`service name is not found for subject ${msg.subject} sid ${msg.sid}`);
         }
 
         const { user, tenant, id } = this._extractUserAndTenant(headers);
@@ -66,15 +71,31 @@ export class NatsRFCService extends NatsMQBaseService {
         }
         catch (error) {
           await tx.rollback();
+          throw error;
         }
       }
       catch (error) {
         this.logger.error("process subject", msg.subject, "sid", msg.sid, "failed", error);
+        msg.respond(
+          this.codec.encode(error.message),
+          {
+            headers: this._createHeaders({ "error": "true" })
+          }
+        );
       }
 
     }
   }
 
+  /**
+   * execute invocation remotely 
+   * 
+   * @param appName remote app name
+   * @param serviceName remote service name (full qualified name)
+   * @param query CQN query
+   * @throws {RFCError} remote thrown message
+   * @returns result value from remote
+   */
   public async execute(appName: string, serviceName: string, query: QueryObject) {
     const msg = await this.nc.request(
       this._toAppQueueGroup(appName),
@@ -84,6 +105,12 @@ export class NatsRFCService extends NatsMQBaseService {
         timeout: 60 * 1000, // TODO: options
       },
     );
+    if (msg.headers?.get?.("error") === "true") {
+      throw new RFCError(
+        this.codec.decode(msg.data),
+        appName
+      );
+    }
     return this.codec.decode(msg.data);
   }
 

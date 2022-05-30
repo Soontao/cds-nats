@@ -107,5 +107,6 @@ service PeopleService {
   - [ ] OData Service query
   - [ ] OData Function/Action
   - [ ] Rest Adapter operation
+  - [x] Error handler
 
 ## [LICENSE](./LICENSE)

@@ -54,7 +54,7 @@ class NatsLockService extends NatsKVService<string> {
         timer = setTimeout(() => {
           this.logger.error("lock resource", k, "failed, timeout", acquireTimeout);
           finished = true;
-          reject(new LockTimeoutError(`acquire lock failed ${k}`));
+          reject(new LockTimeoutError(k, acquireTimeout as number));
         }, acquireTimeout);
       }
 

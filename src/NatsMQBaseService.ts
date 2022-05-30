@@ -25,6 +25,14 @@ export class NatsMQBaseService extends NatsService {
 
   protected codec = JSONCodec<any>();
 
+  protected _createHeaders(headers: HeaderObject = {}) {
+    const msgHeaders = MsgHeaders();
+    for (const [key, value] of Object.entries(headers)) {
+      msgHeaders.set(key, String(value));
+    }
+    return msgHeaders;
+  }
+
   // >> utils
 
   /**
@@ -71,13 +79,9 @@ export class NatsMQBaseService extends NatsService {
    * @param event 
    * @returns 
    */
-  protected _toNatsHeaders(headers: any = {}, event?: string) {
+  protected _toNatsHeaders(headers: HeaderObject = {}, event?: string) {
 
-    const msgHeaders = MsgHeaders();
-
-    for (const [key, value] of Object.entries(headers)) {
-      msgHeaders.set(key, String(value));
-    }
+    const msgHeaders = this._createHeaders(headers);
 
     const cds = cwdRequireCDS();
 

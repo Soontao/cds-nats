@@ -38,5 +38,18 @@ describe("RFC Test Suite", () => {
     expect(result).toBeNull()
   });
 
+  it('should support throw remote service reported error', async () => {
+    const cds = cwdRequireCDS()
+    const { SELECT } = cds.ql
+    const messaging = await cds.connect.to("messaging") as NatsRFCService
+    await expect(
+      () => messaging.execute(
+        "demo-app-micro-service",
+        "test.app.srv.theosun.PeopleService",
+        SELECT.one.from("NotExistedEntity").where({ Name: "Theo" })
+      )
+    ).rejects.toThrow("no such table")
+  });
+
 
 });
