@@ -32,7 +32,11 @@
         }
       },
       "nats": {
-        "impl": "../../src"
+        "impl": "../../src",
+        "rfc": {
+          "name": "demo-app-micro-service",
+          "enabled": true
+        }
       },
       "nats-kv": {
         "impl": "../../src/NatsKVService"

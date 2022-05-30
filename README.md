@@ -97,11 +97,15 @@ service PeopleService {
   - [x] delete
   - [x] update
   - [ ] Nats options documentation
-- [x] Nats Lock Service
+- [x] Nats Distributed Lock Service
   - [x] 100 values test
   - [x] acquire timeout
   - [x] lock timeout (dead lock)
   - [x] synchronized method (high level API)
   - [ ] Nats options documentation
+- [x] Nats RFC Service
+  - [ ] OData Service query
+  - [ ] OData Function/Action
+  - [ ] Rest Adapter operation
 
 ## [LICENSE](./LICENSE)

@@ -67,14 +67,14 @@ describe('Lock Service Test Suite', () => {
     const asyncOp = async () => {
       const unlock = await lock.lock("asyncOp")
       const localValue = value
-      await sleep(Math.round(Math.random() * 100))
+      await sleep(Math.round(Math.random() * 50))
       value = localValue + 1
       return unlock()
     }
 
-    await Promise.all(Array(100).fill(0).map(() => asyncOp()))
+    await Promise.all(Array(50).fill(0).map(() => asyncOp()))
 
-    expect(value).toBe(100)
+    expect(value).toBe(50)
 
   });
 
@@ -83,13 +83,13 @@ describe('Lock Service Test Suite', () => {
     const lock = await cds.connect.to("lock") as NatsLockService;
     let value = 0
 
-    await Promise.all(Array(100).fill(0).map(() => lock.synchronized("asyncOp2", async () => {
+    await Promise.all(Array(50).fill(0).map(() => lock.synchronized("asyncOp2", async () => {
       const localValue = value
-      await sleep(Math.round(Math.random() * 100))
+      await sleep(Math.round(Math.random() * 50))
       value = localValue + 1
     })))
 
-    expect(value).toBe(100)
+    expect(value).toBe(50)
 
   });
 
