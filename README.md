@@ -84,27 +84,32 @@ service PeopleService {
     - [ ] complex test case
   - [x] Produce/Consume
     - [x] basic support and test case
-  - [x] `tenant` recover
-  - [x] `user` recover
-    - [x] `user-attr` recover
+  - [x] tenant aware
+    - [x] `tenant` recover
+    - [x] `user` recover
+      - [x] `user-attr` recover
   - [ ] `messaging`
     - [ ] `srv.on`
     - [x] `srv.emit`
   - [ ] Outbox enable
   - [ ] Nats options documentation
 - [x] Nats KV Store
+  - [ ] tenant aware
   - [x] get
+    - [ ] get with provider
   - [x] set
   - [x] delete
   - [x] update
   - [ ] Nats options documentation
 - [x] Nats Distributed Lock Service
+  - [ ] tenant aware
   - [x] 100 values test
   - [x] acquire timeout
   - [x] lock timeout (dead lock)
   - [x] synchronized method (high level API)
   - [ ] Nats options documentation
 - [x] Nats RFC Service
+  - [ ] tenant aware
   - [ ] OData Service query
   - [ ] OData Function/Action
   - [ ] Rest Adapter operation

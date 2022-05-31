@@ -36,9 +36,12 @@ describe("KV Test Suite", () => {
     expect(await kv.get(id)).toBe("v2")
     await kv.remove(id)
     expect(await kv.get(id)).toBeNull()
-
     expect(await kv.keys()).toHaveLength(0)
 
+    expect(await kv.get("k3", () => "v4")).toBe("v4")
+    expect(await kv.get("k3")).toBe("v4")
+    
+    await kv.removeAll()
   });
 
 

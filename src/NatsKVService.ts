@@ -1,8 +1,13 @@
+import { cwdRequireCDS } from "cds-internal-tool";
 import { JSONCodec } from "nats";
 import { KV, KvEntry, KvOptions } from "nats/lib/nats-base-client/types";
 import { NatsService } from "./NatsService";
+import { ValueProvider } from "./types";
 
-const DEFAULT_OPTIONS: Partial<KvOptions> = { history: 1, };
+const DEFAULT_OPTIONS: Partial<KvOptions> = { history: 1 };
+
+
+
 
 /**
  * Nats KV Service
@@ -14,34 +19,67 @@ const DEFAULT_OPTIONS: Partial<KvOptions> = { history: 1, };
  */
 class NatsKVService<V = any> extends NatsService {
 
-  protected kv!: KV;
 
   protected codec = JSONCodec<V>();
+
+  protected tenantsKV = new Map<string, KV | Promise<KV>>();
 
   protected ttl = -1;
 
   async init(): Promise<any> {
     await super.init();
-    const bucket = this.options.bucket ?? this.name;
-    const options = Object.assign(
-      {},
-      DEFAULT_OPTIONS,
-      this.options?.options ?? {}
-    );
-    this.logger.debug(
-      "connecting to nats kv bucket",
-      bucket,
-      "options",
-      options
-    );
-    this.kv = await this.nc.jetstream().views.kv(
-      bucket,
-      options,
-    );
-
     if (typeof this.options?.ttl === "number") {
       this.ttl = this.options.ttl;
     }
+  }
+
+  /**
+   * tenant kv proxy
+   */
+  protected get kv(): KV {
+    const cds = cwdRequireCDS();
+    const tenant = cds?.context?.tenant;
+
+    if (!this.tenantsKV.has(tenant)) {
+      const bucket = `${this.options.bucket ?? this.name}_${String(tenant)}`;
+      const options = Object.assign(
+        {},
+        DEFAULT_OPTIONS,
+        this.options?.options ?? {}
+      );
+      this.logger.debug(
+        "connecting to nats kv bucket",
+        bucket,
+        "options",
+        options,
+        "for tenant",
+        tenant
+      );
+      this.tenantsKV.set(tenant,
+        this
+          .nc
+          .jetstream()
+          .views
+          .kv(bucket, options,)
+          .then(kv => { this.tenantsKV.set(tenant, kv); return kv; })
+      );
+    }
+
+    const kv = this.tenantsKV.get(tenant) as KV | Promise<KV>;
+
+    if (kv instanceof Promise) {
+      return new Proxy({}, {
+        get: (_, prop) => {
+          return async (...args: Array<any>) => {
+            const iKv: any = await kv;
+            return iKv[prop]?.(...args);
+          };
+        }
+      }) as KV;
+    }
+
+    return kv;
+
   }
 
   /**
@@ -58,7 +96,16 @@ class NatsKVService<V = any> extends NatsService {
   /**
    * get value by key, null if not existed
    */
-  async get(k: string) {
+  async get(k: string, provider?: ValueProvider<V>): Promise<V | null> {
+    if (provider !== undefined) {
+      const value = await this.get(k);
+      if (value !== null) { return value; }
+      const newValue = await provider(k);
+      if (newValue !== null) {
+        await this.set(k, newValue);
+      }
+      return newValue;
+    }
     const result = await this.kv.get(k);
     if (result === null || result?.length === 0) { return null; }
     if (this._isTimeout(result)) {
