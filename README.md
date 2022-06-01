@@ -2,6 +2,7 @@
 
 > support the [nats message broker](https://nats.io/) for CAP NodeJS runtime.
 
+[![npm](https://img.shields.io/npm/v/cds-nats)](https://www.npmjs.com/package/cds-nats)
 [![node-test](https://github.com/Soontao/cds-nats/actions/workflows/nodejs.yml/badge.svg)](https://github.com/Soontao/cds-nats/actions/workflows/nodejs.yml)
 [![node-lint](https://github.com/Soontao/cds-nats/actions/workflows/nodejs-lint.yml/badge.svg)](https://github.com/Soontao/cds-nats/actions/workflows/nodejs-lint.yml)
 [![codecov](https://codecov.io/gh/Soontao/cds-nats/branch/main/graph/badge.svg?token=4kxWUSx1Ox)](https://codecov.io/gh/Soontao/cds-nats)
@@ -230,5 +231,7 @@ left to right direction
   - [ ] OData Function/Action
   - [ ] Rest Adapter operation
   - [x] Error handler
+
+## [CHANGELOG](./CHANGELOG.md)
 
 ## [LICENSE](./LICENSE)
