@@ -41,20 +41,26 @@ npm i -S cds-nats
 CDS_REQUIRES_NATS_SERVERS=127.0.0.1:4222
 ```
 
-## Queue and Subscription
+## Nats Messaging Service
+
+> Use `Nats` as a message broker
+
+### Queue and Subscription
 
 Different from than the default behavior of [CAP Messaging Service](https://cap.cloud.sap/docs/node.js/messaging), `cds-nats` will prefer to listen event on `Queue Group` instead of general `Subscription`, because in micro-service architecture, in most case we need the `Queue/Consumer Group` each message only be consumed by single service instance.
 
 ```mermaid
 graph LR
 
-Producer_1 -->|Message 1| Nats
-Producer_2 -->|Message 2| Nats
-Producer_3 -->|Message 3| Nats
+Producer_1[Application A, Instance 1] -->|Message 1| Nats
+Producer_2[Application A, Instance 2] -->|Message 2| Nats
+Producer_3[Application B, Instance 1] -->|Message 3| Nats
 
-Nats -->|Message 3| Consumer_1
-Nats -->|Message 1| Consumer_2
-Nats -->|Message 2| Consumer_3
+Nats(Nats Message Broker)
+
+Nats -->|Message 3| Consumer_1[Application C, Instance 1]
+Nats -->|Message 1| Consumer_2[Application C, Instance 2]
+Nats -->|Message 2| Consumer_3[Application C, Instance 3]
 ```
 
 
@@ -63,13 +69,15 @@ Also, if you want to apply the `Publisher/Subscriber - Broadcast` pattern, just 
 ```mermaid
 graph LR
 
-Publisher_1 -->|Message 1| Nats
-Publisher_2 -->|Message 2| Nats
-Publisher_3 -->|Message 3| Nats
+Publisher_1[Application A, Instance 1] -->|Message 1| Nats
+Publisher_2[Application A, Instance 2] -->|Message 2| Nats
+Publisher_3[Application B, Instance 1] -->|Message 3| Nats
 
-Nats -->|Message 1/2/3| Subscriber_1
-Nats -->|Message 1/2/3| Subscriber_2
-Nats -->|Message 1/2/3| Subscriber_3
+Nats(Nats Message Broker)
+
+Nats -->|Message 1, Message 2, Message 3| Subscriber_1[Application C, Instance 1]
+Nats -->|Message 1, Message 2, Message 3| Subscriber_2[Application C, Instance 2]
+Nats -->|Message 1, Message 2, Message 3| Subscriber_3[Application D, Instance 1]
 ```
 
 
@@ -102,6 +110,44 @@ service PeopleService {
 
 ```
 
+### Options
+
+TBD
+
+## Nats KV Service
+
+> Use `Nats` as a KV store
+
+> This is an **experimental** feature of Nats, you MUST [enable the jetstream feature](https://docs.nats.io/nats-concepts/jetstream/js_walkthrough#prerequisite-enabling-jetstream) in nats server
+
+![](https://kroki.io/plantuml/svg/eNqNjzsOwjAUBHufYktS5AIpUHokGiR6Cy_kCWOj500ibs-nBol6ZrTasSm65lsOmWdBFW6XSUjmPMlqCcM-qmF3xEHVOaDvt9g0CkvMM7GaJlz56PCviVgS7l4XS_RfWbamt9y67zwxU_wMh5ElvR48AfT5Qj0=)
+
+<!-- 
+
+@startuml
+left to right direction
+:Nats KV Store: -\-> (set value with key) 
+:Nats KV Store: -\-> (set value with key and provider) 
+:Nats KV Store: -\-> (list keys)
+:Nats KV Store: -\-> (delete key)
+@enduml
+
+ -->
+
+### Options
+
+TBD
+
+## Nats Lock Service
+
+> Use `Nats` as a distributed lock service
+
+> This is an **experimental** feature of Nats, you MUST [enable the jetstream feature](https://docs.nats.io/nats-concepts/jetstream/js_walkthrough#prerequisite-enabling-jetstream) in nats server
+
+### Options
+
+TBD
+
 ## Features
 
 - [x] Nats Messaging Service
@@ -121,10 +167,9 @@ service PeopleService {
 - [x] Nats KV Store
   - [ ] tenant aware
   - [x] get
-    - [ ] get with provider
+    - [x] get with provider
   - [x] set
   - [x] delete
-  - [x] update
   - [ ] Nats options documentation
 - [x] Nats Distributed Lock Service
   - [ ] tenant aware
