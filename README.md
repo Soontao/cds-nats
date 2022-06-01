@@ -136,7 +136,29 @@ left to right direction
 
 ### Options
 
-TBD
+> configure the `kv` service
+
+```json
+{
+  "cds": {
+    "requires": {
+      "kv": {
+        "kind": "nats-kv",
+        "ttl": 100
+      },
+      "kv5000": {
+        "kind": "nats-kv",
+        "ttl": 5000
+      },
+      "nats-kv": {
+        "impl": "cds-nats/lib/NatsKVService"
+      }
+    }
+  }
+}
+```
+
+- `ttl`, the maximum validity for each key, in milliseconds.
 
 ## Nats Lock Service
 
@@ -146,7 +168,31 @@ TBD
 
 ### Options
 
-TBD
+```json
+{
+  "cds": {
+    "requires": {
+      "lock": {
+        "kind": "nats-lock",
+        "check": {
+          "interval": 10
+        },
+        "lock": {
+          "acquire": 10000
+        }
+      },
+      "nats-lock": {
+        "impl": "cds-nats/lib/NatsLockService"
+      }
+    }
+  }
+}
+```
+
+- `check.interval`: `NatsLockService` check lock in polling mode, so this is the check interval
+- `lock.acquire`: if the lock of target resource could be acquired immediately, `NatsLockService` will pending, if the target lock could not be acquired in specific timeout duration, `NatsLockService` will throw error to avoid to long time pending
+- `lock.timeout`: the maximum timeout for single lock, if a resource is locked too long time, client will force acquire it, the defualt value is **1 HOUR**  
+
 
 ## Features
 
