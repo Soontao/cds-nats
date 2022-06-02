@@ -160,11 +160,12 @@ left to right direction
 
 - `ttl`, the maximum validity for each key, in milliseconds.
 
-## Nats Lock Service
+## Nats Distributed Lock Service
 
 > Use `Nats` as a distributed lock service
 
 > This is an **experimental** feature of Nats, you MUST [enable the jetstream feature](https://docs.nats.io/nats-concepts/jetstream/js_walkthrough#prerequisite-enabling-jetstream) in nats server
+
 
 ### Options
 
@@ -198,6 +199,16 @@ left to right direction
 > Use `Nats` as a RFC communication tool
 
 > To use the `NatsRFCService`, **MUST** enable Nats Messaging Service firstly
+
+
+```mermaid
+graph LR
+ServiceA -->|1. Run CQN XXX| Nats
+Nats(Nats Queue Group - ServiceC)
+Nats -->|2. RUN CQN XXX| ServiceC
+ServiceC -->|3. Execution Result| Nats
+Nats -->|4. Execution Result| ServiceA
+```
 
 
 ### Example
