@@ -15,9 +15,9 @@ export abstract class NatsService extends cwdRequireCDS().Service {
 
   async init(): Promise<any> {
     this.logger = cwdRequireCDS().log(`nats|${this.kind}`);
-    this.logger.info("service", this.name, "kind", this.kind, "nats connecting")
+    this.logger.info("service", this.name, "kind", this.kind, "nats connecting");
     this.nc = await connectNats(this.options);
-    this.logger.info("service", this.name, "kind", this.kind, "nats connected")
+    this.logger.info("service", this.name, "kind", this.kind, "nats connected");
   }
 
   /**

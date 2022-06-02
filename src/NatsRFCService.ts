@@ -68,8 +68,11 @@ class NatsRFCService extends NatsService {
         const srv = await cds.connect.to(serviceName);
 
         // @ts-ignore
-        if (typeof srv?.[methodName] !== 'function') {
-          throw new Error(`method/action/function '${methodName}' is not existed on the service '${serviceName}' of app '${this.appName}'`)
+        if (typeof srv?.[methodName] !== "function") {
+          throw new Error(
+            `method/action/function '${methodName}' is not `
+            + `existed on the service '${serviceName}' of app '${this.appName}'`
+          );
         }
 
         // @ts-ignore
@@ -88,9 +91,9 @@ class NatsRFCService extends NatsService {
       }
       catch (error) {
         this.logger.error("process subject", msg.subject, "sid", msg.sid, "failed", error);
-        const errorObject = { ...error }
-        if ('message' in error) {
-          errorObject['message'] = error['message']
+        const errorObject = { ...error };
+        if ("message" in error) {
+          errorObject["message"] = error["message"];
         }
         msg.respond(
           this.codec.encode(errorObject),
@@ -123,18 +126,18 @@ class NatsRFCService extends NatsService {
 
     // process error
     if (msg.headers?.get?.("throw") === "true") {
-      const throwObject = this.codec.decode(msg.data)
+      const throwObject = this.codec.decode(msg.data);
 
       if (msg.headers?.get?.("error") === "true") {
         const error = new RFCError(
           throwObject?.message ?? "Unknown Error",
           appName
         );
-        Object.assign(error, throwObject)
-        throw error
+        Object.assign(error, throwObject);
+        throw error;
       }
       else {
-        throw throwObject
+        throw throwObject;
       }
 
     }
