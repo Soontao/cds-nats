@@ -19,4 +19,9 @@ export interface HeaderObject {
 
 export interface RFCInvocationInfo { serviceName: string, methodName: string, args: Array<any> }
 
-export type RFCService<T extends ApplicationService = ApplicationService> = Pick<T, "emit" | "run" | "send">
+export type RFCService<T extends ApplicationService = ApplicationService> = Pick<T, "emit" | "run" | "send"> & {
+  /**
+   * freestyle remote function, typically a custom function/action
+   */
+  [actionName: string]: (...args: Array<any>) => Promise<any>;
+}

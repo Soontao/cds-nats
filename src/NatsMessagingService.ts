@@ -1,4 +1,4 @@
-import { ApplicationService, cwdRequireCDS, Definition, TransactionMix } from "cds-internal-tool";
+import { ApplicationService, cwdRequireCDS, Definition, Service, TransactionMix } from "cds-internal-tool";
 import { Subscription } from "nats";
 import { FatalError } from "./errors";
 import { NatsService } from "./NatsService";
@@ -17,13 +17,17 @@ export class NatsMessagingService extends NatsService {
   async init(): Promise<any> {
     await super.init();
     const cds = cwdRequireCDS();
-    cds.on("subscribe", (srv, event) => {
-      const eventDef = srv.events[event];
-      if (srv instanceof cds.ApplicationService && eventDef !== undefined) this._subscribeEvent(srv, eventDef);
-    });
+    cds.on("subscribe", this._onSubscribe.bind(this));
+    // automatically connect to nats-rfc
     for (const [serviceName, config] of Object.entries<any>(cds.env.requires)) {
       if (config.kind === "nats-rfc") { await cds.connect.to(serviceName); }
     }
+  }
+
+  private _onSubscribe(srv: Service, event: string) {
+    const cds = cwdRequireCDS();
+    const eventDef = srv.events[event];
+    if (srv instanceof cds.ApplicationService && eventDef !== undefined) this._subscribeEvent(srv, eventDef);
   }
 
   private _subscribeEvent(srv: ApplicationService, def: Definition) {

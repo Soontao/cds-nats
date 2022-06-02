@@ -19,22 +19,6 @@
 npm i -S cds-nats
 ```
 
-> configure `package.json`
-
-```json
-{
-  "cds": {
-    "requires": {
-      "messaging": {
-        "kind": "nats"
-      },
-      "nats": {
-        "impl": "cds-nats"
-      }
-    }
-  }
-}
-```
 
 > and ref the [Process Environment](https://cap.cloud.sap/docs/node.js/cds-env#process-env) document to configure the [`Nats Connection-Options`](https://github.com/nats-io/nats.js#Connection-Options)
 
@@ -115,6 +99,21 @@ service PeopleService {
 
 TBD
 
+```json
+{
+  "cds": {
+    "requires": {
+      "messaging": {
+        "kind": "nats"
+      },
+      "nats": {
+        "impl": "cds-nats"
+      }
+    }
+  }
+}
+```
+
 ## Nats KV Service
 
 > Use `Nats` as a KV store
@@ -194,6 +193,66 @@ left to right direction
 - `lock.acquire`: if the lock of target resource could be acquired immediately, `NatsLockService` will pending, if the target lock could not be acquired in specific timeout duration, `NatsLockService` will throw error to avoid to long time pending
 - `lock.timeout`: the maximum timeout for single lock, if a resource is locked too long time, client will force acquire it, the defualt value is **1 HOUR**  
 
+## Nats RFC Service
+
+> Use `Nats` as a RFC communication tool
+
+> To use the `NatsRFCService`, **MUST** enable Nats Messaging Service firstly
+
+
+### Example
+
+```js
+const cds = cwdRequireCDS()
+const { INSERT } = cds.ql
+const messaging = await cds.connect.to("rfc") as NatsRFCService
+const remoteApp = messaging.app("demo-app-micro-service");
+const remotePeopleService = remoteApp.service("test.app.srv.theosun.PeopleService")
+const newPeople = await remotePeopleService.run(
+  INSERT.into("People").entries({ Name: cds.utils.uuid() })
+)
+expect(newPeople).not.toBeNull()
+expect(newPeople.Name).not.toBeUndefined()
+const updatedPeople = await remotePeopleService.updateWeight(newPeople.ID, 12.3)
+expect(updatedPeople.Name).toBe(newPeople.Name)
+expect(updatedPeople.Weight).toBe(12.3)
+
+await expect(() => remotePeopleService.notExistFunction())
+  .rejects
+  .toThrow("method/action/function 'notExistFunction' is not existed on the service 'test.app.srv.theosun.PeopleService'")
+```
+
+### Options
+
+```json
+{
+  "cds": {
+    "requires": {
+      "messaging": {
+        "kind": "nats"
+      },
+      "rfc": {
+        "kind": "nats-rfc",
+        "app": {
+          "name": "demo-app-micro-service"
+        },
+        "invoke": {
+          "timeout": 180000
+        }
+      },
+      "nats": {
+        "impl": "cds-nats"
+      },
+      "nats-rfc": {
+        "impl": "cds-nats/lib/NatsRFCService"
+      }
+    }
+  }
+}
+```
+
+- `app.name` - the app name of current application, its an identifier which will be used for RFC
+- `app.timeout` - the timeout of each invocation, for example, if remote server do not respond result in 3 minutes, `NatsRFCService` will stop waiting and throw error
 
 ## Features
 
@@ -226,11 +285,12 @@ left to right direction
   - [x] synchronized method (high level API)
   - [ ] Nats options documentation
 - [x] Nats RFC Service
-  - [ ] tenant aware
-  - [ ] OData Service query
-  - [ ] OData Function/Action
+  - [x] tenant aware
+  - [x] OData Service query
+  - [x] OData Unbounded Function/Action
   - [ ] Rest Adapter operation
   - [x] Error handler
+  - [ ] Demo Micro Service
 
 ## [CHANGELOG](./CHANGELOG.md)
 

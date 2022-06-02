@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@newdash/newdash": "^5.21.2",
-    "cds-internal-tool": "^0.0.28",
+    "cds-internal-tool": "^0.0.29",
     "nats": "^2.7.1"
   },
   "license": "Apache-2.0",

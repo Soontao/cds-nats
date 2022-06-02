@@ -8,6 +8,9 @@ import { NatsService } from "./NatsService";
 import { RFCInvocationInfo, RFCService } from "./types";
 import { createNatsHeaders, extractUserAndTenant, toHeader, toNatsHeaders } from "./utils";
 
+
+// TODO: single instance validation
+
 /**
  * NatsRFCService
  * 
@@ -27,7 +30,7 @@ class NatsRFCService extends NatsService {
   async init(): Promise<any> {
     await super.init();
     this.appName = this.options?.app?.name ?? path.basename(process.cwd());
-    this.timeout = this.options?.app?.timeout ?? this.timeout;
+    this.timeout = this.options?.invoke?.timeout ?? this.timeout;
     this.appQueueGroup = this._toAppQueueGroup(this.appName);
     this._listenServiceQueue();
   }
@@ -57,8 +60,17 @@ class NatsRFCService extends NatsService {
           throw new Error(`service name is not found for subject ${msg.subject} sid ${msg.sid}`);
         }
 
+        if (methodName === undefined) {
+          throw new Error(`method name is not found for subject ${msg.subject} sid ${msg.sid}`);
+        }
+
         const { user, tenant, id } = extractUserAndTenant(headers);
         const srv = await cds.connect.to(serviceName);
+
+        // @ts-ignore
+        if (typeof srv?.[methodName] !== 'function') {
+          throw new Error(`method/action/function '${methodName}' is not existed on the service '${serviceName}' of app '${this.appName}'`)
+        }
 
         // @ts-ignore
         const tx: ApplicationService & TransactionMix = cds.context = srv.tx({ tenant, user, id, headers });
@@ -76,10 +88,14 @@ class NatsRFCService extends NatsService {
       }
       catch (error) {
         this.logger.error("process subject", msg.subject, "sid", msg.sid, "failed", error);
+        const errorObject = { ...error }
+        if ('message' in error) {
+          errorObject['message'] = error['message']
+        }
         msg.respond(
-          this.codec.encode(error.message),
+          this.codec.encode(errorObject),
           {
-            headers: createNatsHeaders({ "error": "true" })
+            headers: createNatsHeaders({ "error": error instanceof Error ? "true" : "false", "throw": "true" })
           }
         );
       }
@@ -92,7 +108,7 @@ class NatsRFCService extends NatsService {
    * 
    * @param appName remote app name
    * @param invocationInfo remote invocation info (full qualified name)
-   * @throws {RFCError} remote thrown message
+   * @throws {RFCError|object} remote thrown message
    * @returns result value from remote
    */
   public async execute(appName: string, invocationInfo: RFCInvocationInfo) {
@@ -104,12 +120,23 @@ class NatsRFCService extends NatsService {
         timeout: this.timeout,
       },
     );
-    if (msg.headers?.get?.("error") === "true") {
-      // TODO: multi message error
-      throw new RFCError(
-        this.codec.decode(msg.data),
-        appName
-      );
+
+    // process error
+    if (msg.headers?.get?.("throw") === "true") {
+      const throwObject = this.codec.decode(msg.data)
+
+      if (msg.headers?.get?.("error") === "true") {
+        const error = new RFCError(
+          throwObject?.message ?? "Unknown Error",
+          appName
+        );
+        Object.assign(error, throwObject)
+        throw error
+      }
+      else {
+        throw throwObject
+      }
+
     }
     return this.codec.decode(msg.data);
   }

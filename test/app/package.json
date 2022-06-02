@@ -34,7 +34,9 @@
       "rfc": {
         "kind": "nats-rfc",
         "app": {
-          "name": "demo-app-micro-service",
+          "name": "demo-app-micro-service"
+        },
+        "invoke": {
           "timeout": 180000
         }
       },

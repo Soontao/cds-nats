@@ -14,7 +14,8 @@ service PeopleService {
     Amount : Decimal default 0;
   }
 
-  action updateWeight(ID : UUID, Weight : Decimal) returns People;
+  action   updateWeight(ID : UUID, Weight : Decimal) returns People;
+  function multiErrors(ID : UUID)                    returns {};
 
   event changeAmount {
     peopleID : UUID;

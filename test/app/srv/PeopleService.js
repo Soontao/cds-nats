@@ -9,7 +9,8 @@ module.exports = async (srv) => {
   const cds = cwdRequireCDS();
   const { People } = srv.entities;
   const { changeAmount, updateName, updateAge } = srv.events
-  const { updateWeight } = srv.operations;
+  const { updateWeight, multiErrors } = srv.operations;
+  
   srv.on(changeAmount, async (req) => {
     const { data, user } = req;
     const people = await srv.run(cds.ql.SELECT.one.from(People, data.peopleID));
@@ -17,6 +18,12 @@ module.exports = async (srv) => {
       await srv.run(cds.ql.UPDATE.entity(People).set({ Amount: data.amount }).byKey(data.peopleID));
     }
   });
+
+  srv.on(multiErrors, async (req) => {
+    req.warn("NOT_SUPPORTED")
+    req.error('400', "ERROR_1")
+    return req.error("FATAL: error")
+  })
 
   srv.on(updateWeight, async (req) => {
     const { data } = req
