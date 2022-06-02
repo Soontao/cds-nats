@@ -14,6 +14,8 @@ service PeopleService {
     Amount : Decimal default 0;
   }
 
+  action updateWeight(ID : UUID, Weight : Decimal) returns People;
+
   event changeAmount {
     peopleID : UUID;
     amount   : Decimal;

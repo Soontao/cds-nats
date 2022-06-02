@@ -2,11 +2,7 @@
   "cds": {
     "requires": {
       "messaging": {
-        "kind": "nats",
-        "rfc": {
-          "name": "demo-app-micro-service",
-          "enabled": true
-        }
+        "kind": "nats"
       },
       "kv": {
         "kind": "nats-kv",
@@ -35,6 +31,13 @@
           "acquire": 10000
         }
       },
+      "rfc": {
+        "kind": "nats-rfc",
+        "app": {
+          "name": "demo-app-micro-service",
+          "timeout": 180000
+        }
+      },
       "nats": {
         "impl": "../../src"
       },
@@ -43,6 +46,9 @@
       },
       "nats-lock": {
         "impl": "../../src/NatsLockService"
+      },
+      "nats-rfc": {
+        "impl": "../../src/NatsRFCService"
       }
     }
   }

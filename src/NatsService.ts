@@ -1,5 +1,5 @@
 import { cwdRequireCDS, Logger } from "cds-internal-tool";
-import { connect as connectNats, NatsConnection } from "nats";
+import { connect as connectNats, JSONCodec, NatsConnection } from "nats";
 
 
 /**
@@ -10,6 +10,8 @@ export abstract class NatsService extends cwdRequireCDS().Service {
   protected nc!: NatsConnection;
 
   protected logger!: Logger;
+
+  protected codec = JSONCodec<any>();
 
   async init(): Promise<any> {
     this.logger = cwdRequireCDS().log(`nats|${this.kind}`);

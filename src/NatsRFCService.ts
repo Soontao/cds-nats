@@ -1,21 +1,19 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { cwdRequireCDS } from "cds-internal-tool";
-import { QueryObject } from "cds-internal-tool/lib/types/ql";
+import { ApplicationService, cwdRequireCDS, TransactionMix } from "cds-internal-tool";
 import { Subscription } from "nats";
 import path from "path";
 import process from "process";
 import { RFCError } from "./errors";
-import { NatsMQBaseService } from "./NatsMQBaseService";
-
-const HEADER_SERVICE_NAME = "servicename";
-
+import { NatsService } from "./NatsService";
+import { RFCInvocationInfo, RFCService } from "./types";
+import { createNatsHeaders, extractUserAndTenant, toHeader, toNatsHeaders } from "./utils";
 
 /**
  * NatsRFCService
  * 
  * enable RFC/RPC capability for CAP/Nats
  */
-export class NatsRFCService extends NatsMQBaseService {
+class NatsRFCService extends NatsService {
 
   /**
    * the app name of current app
@@ -24,18 +22,18 @@ export class NatsRFCService extends NatsMQBaseService {
 
   private appQueueGroup!: string;
 
+  private timeout: number = 60 * 1000; // 1 minutes
+
   async init(): Promise<any> {
     await super.init();
-    if (this.options?.rfc?.enabled === true || this.options?.rfc?.enabled === "true") {
-      this.logger.info("rfc service enabled");
-      this.appName = this.options?.rfc?.name ?? path.basename(process.cwd());
-      this.appQueueGroup = this._toAppQueueGroup(this.appName);
-      this._listenServiceQueue();
-    }
+    this.appName = this.options?.app?.name ?? path.basename(process.cwd());
+    this.timeout = this.options?.app?.timeout ?? this.timeout;
+    this.appQueueGroup = this._toAppQueueGroup(this.appName);
+    this._listenServiceQueue();
   }
 
   private _toAppQueueGroup(serviceName: string) {
-    return [this.options.prefix ?? "", serviceName].join("");
+    return ["nats-rfc", this.options.prefix ?? "", serviceName].join("-");
   }
 
   private _listenServiceQueue() {
@@ -51,21 +49,23 @@ export class NatsRFCService extends NatsMQBaseService {
     const cds = cwdRequireCDS();
     for await (const msg of sub) {
       try {
-        const query = this.codec.decode(msg.data);
-        const headers = this._toHeader(msg);
-        const serviceName = headers[HEADER_SERVICE_NAME];
+        const event: RFCInvocationInfo = this.codec.decode(msg.data);
+        const headers = toHeader(msg);
+        const { serviceName, methodName, args } = event;
 
         if (serviceName === undefined) {
           throw new Error(`service name is not found for subject ${msg.subject} sid ${msg.sid}`);
         }
 
-        const { user, tenant, id } = this._extractUserAndTenant(headers);
+        const { user, tenant, id } = extractUserAndTenant(headers);
         const srv = await cds.connect.to(serviceName);
+
         // @ts-ignore
-        const tx = cds.context = srv.tx({ tenant, user, id });
+        const tx: ApplicationService & TransactionMix = cds.context = srv.tx({ tenant, user, id, headers });
 
         try {
-          const response = await tx.run(query);
+          // @ts-ignore
+          const response = await tx[methodName](...args);
           await tx.commit();
           msg.respond(this.codec.encode(response));
         }
@@ -79,7 +79,7 @@ export class NatsRFCService extends NatsMQBaseService {
         msg.respond(
           this.codec.encode(error.message),
           {
-            headers: this._createHeaders({ "error": "true" })
+            headers: createNatsHeaders({ "error": "true" })
           }
         );
       }
@@ -91,21 +91,21 @@ export class NatsRFCService extends NatsMQBaseService {
    * execute invocation remotely 
    * 
    * @param appName remote app name
-   * @param serviceName remote service name (full qualified name)
-   * @param query CQN query
+   * @param invocationInfo remote invocation info (full qualified name)
    * @throws {RFCError} remote thrown message
    * @returns result value from remote
    */
-  public async execute(appName: string, serviceName: string, query: QueryObject) {
+  public async execute(appName: string, invocationInfo: RFCInvocationInfo) {
     const msg = await this.nc.request(
       this._toAppQueueGroup(appName),
-      this.codec.encode(query),
+      this.codec.encode(invocationInfo),
       {
-        headers: this._toNatsHeaders({ [HEADER_SERVICE_NAME]: serviceName }),
-        timeout: 60 * 1000, // TODO: options
+        headers: toNatsHeaders(),
+        timeout: this.timeout,
       },
     );
     if (msg.headers?.get?.("error") === "true") {
+      // TODO: multi message error
       throw new RFCError(
         this.codec.decode(msg.data),
         appName
@@ -114,5 +114,35 @@ export class NatsRFCService extends NatsMQBaseService {
     return this.codec.decode(msg.data);
   }
 
+  /**
+   * create an application proxy 
+   * 
+   * @param appName 
+   * @returns 
+   */
+  public app(appName: string) {
+    return {
+      /**
+       * create a RFC service with limited methods
+       * 
+       * @param serviceName the service name in remote app
+       * @returns {RFCService}
+       */
+      service: (serviceName: string): RFCService => new Proxy({}, {
+        get: (_, prop) => {
+          if (typeof prop === "string") {
+            // emit/run/send
+            const methodName = prop;
+            return (...args: Array<any>) => {
+              return this.execute(appName, { methodName, serviceName, args });
+            };
+          }
+          // TODO: throw error
+        }
+      }) as any
+    };
+
+  }
 }
 
+export = NatsRFCService

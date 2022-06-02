@@ -1,7 +1,8 @@
 import { ApplicationService, cwdRequireCDS, Definition, TransactionMix } from "cds-internal-tool";
 import { Subscription } from "nats";
 import { FatalError } from "./errors";
-import { NatsRFCService } from "./NatsRFCService";
+import { NatsService } from "./NatsService";
+import { extractUserAndTenant, toHeader, toNatsHeaders } from "./utils";
 
 
 /**
@@ -9,7 +10,7 @@ import { NatsRFCService } from "./NatsRFCService";
  * 
  * @see ref [NATS is a connective technology that powers modern distributed systems.](https://nats.io/)
  */
-export class NatsMessagingService extends NatsRFCService {
+export class NatsMessagingService extends NatsService {
 
   private registeredEvents = new Set<Definition>();
 
@@ -20,6 +21,9 @@ export class NatsMessagingService extends NatsRFCService {
       const eventDef = srv.events[event];
       if (srv instanceof cds.ApplicationService && eventDef !== undefined) this._subscribeEvent(srv, eventDef);
     });
+    for (const [serviceName, config] of Object.entries<any>(cds.env.requires)) {
+      if (config.kind === "nats-rfc") { await cds.connect.to(serviceName); }
+    }
   }
 
   private _subscribeEvent(srv: ApplicationService, def: Definition) {
@@ -54,9 +58,9 @@ export class NatsMessagingService extends NatsRFCService {
     for await (const msg of sub) {
       try {
         const data = this.codec.decode(msg.data);
-        const headers: any = this._toHeader(msg);
+        const headers = toHeader(msg);
 
-        const { user, tenant, id } = this._extractUserAndTenant(headers);
+        const { user, tenant, id } = extractUserAndTenant(headers);
         this.logger.debug(
           "receive event", def.name,
           "for service", srv.name,
@@ -99,7 +103,7 @@ export class NatsMessagingService extends NatsRFCService {
 
     const target = this._prepareTarget(msg.event, false);
 
-    const msgHeaders = this._toNatsHeaders(msg.headers, msg.event);
+    const msgHeaders = toNatsHeaders(msg.headers, msg.event);
 
     this.logger.debug("emit subject", target, "with data", msg.data, "headers", msg.headers);
 

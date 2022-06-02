@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable max-len */
 import { cwdRequireCDS } from "cds-internal-tool";
 import { sleep as Sleep } from "../src/utils";

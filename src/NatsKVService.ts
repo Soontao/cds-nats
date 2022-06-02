@@ -7,8 +7,6 @@ import { ValueProvider } from "./types";
 const DEFAULT_OPTIONS: Partial<KvOptions> = { history: 1 };
 
 
-
-
 /**
  * Nats KV Service
  * 
@@ -18,7 +16,6 @@ const DEFAULT_OPTIONS: Partial<KvOptions> = { history: 1 };
  * 
  */
 class NatsKVService<V = any> extends NatsService {
-
 
   protected codec = JSONCodec<V>();
 

@@ -9,6 +9,14 @@ describe("KV Test Suite", () => {
   beforeAll(beforeAllSetup);
   afterAll(afterAllThings);
 
+  afterEach(async () => {
+    const cds = cwdRequireCDS();
+    const kv = await cds.connect.to("kv") as NatsKVService;
+    const kv5000 = await cds.connect.to("kv5000") as NatsKVService;
+    await kv.removeAll()
+    await kv5000.removeAll()
+  })
+
   it("should find entity metadata", async () => {
     const response = await axios.get("/people/$metadata");
     expect(response.status).toBe(200);
@@ -40,7 +48,7 @@ describe("KV Test Suite", () => {
 
     expect(await kv.get("k3", () => "v4")).toBe("v4")
     expect(await kv.get("k3")).toBe("v4")
-    
+
     await kv.removeAll()
   });
 

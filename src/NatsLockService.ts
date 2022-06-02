@@ -193,8 +193,6 @@ class NatsLockService extends NatsKVService<string> {
     }
   }
 
-
 }
 
-
-export = NatsLockService
+export = NatsLockService;
