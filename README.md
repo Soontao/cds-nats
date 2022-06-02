@@ -203,6 +203,7 @@ left to right direction
 
 ```mermaid
 graph LR
+
 ServiceA[Service A Instance 1]
 ServiceA -->|1. Run CQN XXX| Nats
 Nats(Nats Queue Group - ServiceC)
