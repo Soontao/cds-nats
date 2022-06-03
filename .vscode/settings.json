@@ -9,6 +9,7 @@
   "[typescript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
   },
+  "jest.jestCommandLine": "node --max-old-space-size=512 ./node_modules/.bin/jest --runInBand",
   "cSpell.words": [
     "autocrlf",
     "datacontenttype",
