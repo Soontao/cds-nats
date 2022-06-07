@@ -59,7 +59,7 @@ describe("KV Test Suite", () => {
     const id = cds.utils.uuid()
     await kv.set(id, "v1")
     expect(await kv.get(id)).toBe("v1")
-    await sleep(101) // because in ./app/package.json we set ttl as 500
+    await sleep(101) 
     expect(await kv.get(id)).toBeNull()
   });
 

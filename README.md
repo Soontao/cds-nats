@@ -120,19 +120,34 @@ TBD
 
 > This is an **experimental** feature of Nats, you MUST [enable the jetstream feature](https://docs.nats.io/nats-concepts/jetstream/js_walkthrough#prerequisite-enabling-jetstream) in nats server
 
-![](https://kroki.io/plantuml/svg/eNqNjzsOwjAUBHufYktS5AIpUHokGiR6Cy_kCWOj500ibs-nBol6ZrTasSm65lsOmWdBFW6XSUjmPMlqCcM-qmF3xEHVOaDvt9g0CkvMM7GaJlz56PCviVgS7l4XS_RfWbamt9y67zwxU_wMh5ElvR48AfT5Qj0=)
 
-<!-- 
+```js
+const kv = await cds.connect.to("kv") as NatsKVService;
+expect(kv).toBeInstanceOf(NatsKVService)
 
-@startuml
-left to right direction
-:Nats KV Store: -\-> (set value with key) 
-:Nats KV Store: -\-> (set value with key and provider) 
-:Nats KV Store: -\-> (list keys)
-:Nats KV Store: -\-> (delete key)
-@enduml
+const id = cds.utils.uuid()
+const v = await kv.get(id)
+expect(v).toBeNull()
 
- -->
+expect(await kv.keys()).toHaveLength(0)
+
+await kv.set(id, "v1")
+
+expect(await kv.keys()).toHaveLength(1)
+
+expect(await kv.get(id)).toBe("v1")
+await kv.set(id, "v2")
+expect(await kv.get(id)).toBe("v2")
+await kv.remove(id)
+expect(await kv.get(id)).toBeNull()
+expect(await kv.keys()).toHaveLength(0)
+
+expect(await kv.get("k3", () => "v4")).toBe("v4")
+expect(await kv.get("k3")).toBe("v4")
+
+await kv.removeAll()
+```
+
 
 ### Options
 
@@ -216,7 +231,7 @@ ServiceC[Service C instance 1]
 
 ### Example
 
-```js
+```ts
 const cds = cwdRequireCDS()
 const { INSERT } = cds.ql
 const messaging = await cds.connect.to("rfc") as NatsRFCService
