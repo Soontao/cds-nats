@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.8.1](https://github.com/Soontao/cds-nats-messaging/compare/v2.8.0...v2.8.1) (2022-06-16)
+
+
+### Features
+
+* RFC service ([f636356](https://github.com/Soontao/cds-nats-messaging/commit/f636356bc87b9705d909a403b67db8d016b705d9))
+
+
+### Bug Fixes
+
+* lint ([866d749](https://github.com/Soontao/cds-nats-messaging/commit/866d749fcba15b0999a71774ebecd3281eb7e5ff))
+* xsenv version ([ac19ece](https://github.com/Soontao/cds-nats-messaging/commit/ac19ece656c3b7ad4c90ce7f497f3fa854daf5ba))
+
 ## 2.8.0 (2022-06-01)
 
 
