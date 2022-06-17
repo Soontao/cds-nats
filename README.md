@@ -41,7 +41,7 @@ Producer_1[Application A, Instance 1] -->|Message 1| Nats
 Producer_2[Application A, Instance 2] -->|Message 2| Nats
 Producer_3[Application B, Instance 1] -->|Message 3| Nats
 
-Nats(Nats Message Broker)
+Nats(Nats: Queue XXXX)
 
 Nats -->|Message 3| Consumer_1[Application C, Instance 1]
 Nats -->|Message 1| Consumer_2[Application C, Instance 2]
@@ -58,7 +58,7 @@ Publisher_1[Application A, Instance 1] -->|Message 1| Nats
 Publisher_2[Application A, Instance 2] -->|Message 2| Nats
 Publisher_3[Application B, Instance 1] -->|Message 3| Nats
 
-Nats(Nats Message Broker)
+Nats(Nats: Topic YYYY)
 
 Nats -->|Message 1, Message 2, Message 3| Subscriber_1[Application C, Instance 1]
 Nats -->|Message 1, Message 2, Message 3| Subscriber_2[Application C, Instance 2]
