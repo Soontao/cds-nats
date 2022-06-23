@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { ApplicationService, cwdRequireCDS, TransactionMix } from "cds-internal-tool";
-import { Subscription } from "nats";
+import { Msg, MsgHdrs, Subscription } from "nats";
 import path from "path";
 import process from "process";
 import { RFCError } from "./errors";
@@ -23,8 +23,14 @@ class NatsRFCService extends NatsService {
    */
   private appName!: string;
 
+  /**
+   * the queue group for current app
+   */
   private appQueueGroup!: string;
 
+  /**
+   * request timeout
+   */
   private timeout: number = 60 * 1000; // 1 minutes
 
   async init(): Promise<any> {
@@ -48,63 +54,66 @@ class NatsRFCService extends NatsService {
   }
 
   private async _handleInboundCall(sub: Subscription) {
-    // use the service local event name, otherwise, framework could not found the handlers
-    const cds = cwdRequireCDS();
     for await (const msg of sub) {
-      try {
-        const event: RFCInvocationInfo = this.codec.decode(msg.data);
-        const headers = toHeader(msg);
-        const { serviceName, methodName, args } = event;
+      await this._handleInboundRequest(msg);
+    }
+  }
 
-        if (serviceName === undefined) {
-          throw new Error(`service name is not found for subject ${msg.subject} sid ${msg.sid}`);
-        }
+  private async _handleInboundRequest(msg: Msg) {
+    const cds = cwdRequireCDS();
+    try {
+      const event: RFCInvocationInfo = this.codec.decode(msg.data);
+      const headers = toHeader(msg);
+      const { serviceName, methodName, args } = event;
 
-        if (methodName === undefined) {
-          throw new Error(`method name is not found for subject ${msg.subject} sid ${msg.sid}`);
-        }
-
-        const { user, tenant, id } = extractUserAndTenant(headers);
-        const srv = await cds.connect.to(serviceName);
-
-        // @ts-ignore
-        if (typeof srv?.[methodName] !== "function") {
-          throw new Error(
-            `method/action/function '${methodName}' is not `
-            + `existed on the service '${serviceName}' of app '${this.appName}'`
-          );
-        }
-
-        cds.context = undefined as any;
-        const tx: ApplicationService & TransactionMix = cds.context = srv.tx({
-          tenant, user, id, headers
-        } as any) as any;
-
-        try {
-          // @ts-ignore
-          const response = await tx[methodName](...args);
-          await tx.commit();
-          msg.respond(this.codec.encode(response));
-        }
-        catch (error) {
-          await tx.rollback();
-          throw error;
-        }
+      if (serviceName === undefined) {
+        throw new Error(`service name is not found for subject ${msg.subject} sid ${msg.sid}`);
       }
-      catch (error) {
-        this.logger.error("process subject", msg.subject, "sid", msg.sid, "failed", error);
-        const errorObject = { ...error };
-        if ("message" in error) {
-          errorObject["message"] = error["message"];
-        }
-        msg.respond(
-          this.codec.encode(errorObject),
-          {
-            headers: createNatsHeaders({ "error": error instanceof Error ? "true" : "false", "throw": "true" })
-          }
+
+      if (methodName === undefined) {
+        throw new Error(`method name is not found for subject ${msg.subject} sid ${msg.sid}`);
+      }
+
+      const { user, tenant, id } = extractUserAndTenant(headers);
+      const srv = await cds.connect.to(serviceName);
+
+      // @ts-ignore
+      if (typeof srv?.[methodName] !== "function") {
+        throw new Error(
+          `method/action/function '${methodName}' is not ` +
+          `existed on the app service '${serviceName}'` +
+          ` of app '${this.appName}'`
         );
       }
 
+      cds.context = undefined as any;
+      const tx: ApplicationService & TransactionMix = cds.context = srv.tx({
+        tenant, user, id, headers
+      } as any) as any;
+
+      try {
+        // @ts-ignore
+        const response = await tx[methodName](...args);
+        await tx.commit();
+        msg.respond(this.codec.encode(response));
+      }
+      catch (error) {
+        await tx.rollback();
+        throw error;
+      }
+    }
+    catch (error) {
+      this.logger.error("process subject", msg.subject, "sid", msg.sid, "failed", error);
+      const errorObject = { ...error };
+      if ("message" in error) {
+        errorObject["message"] = error["message"];
+      }
+      msg.respond(
+        this.codec.encode(errorObject),
+        {
+          headers: createNatsHeaders({ "error": error instanceof Error ? "true" : "false", "throw": "true" })
+        }
+      );
     }
   }
 
@@ -117,14 +126,11 @@ class NatsRFCService extends NatsService {
    * @returns result value from remote
    */
   public async execute(appName: string, invocationInfo: RFCInvocationInfo) {
-    const msg = await this.nc.request(
+    const msg = await this._execute(
       this._toAppQueueGroup(appName),
-      this.codec.encode(invocationInfo),
-      {
-        headers: toNatsHeaders(),
-        timeout: this.timeout,
-      },
-    );
+      invocationInfo,
+      toNatsHeaders(),
+    )
 
     // process error
     if (msg.headers?.get?.("throw") === "true") {
@@ -175,6 +181,29 @@ class NatsRFCService extends NatsService {
     };
 
   }
+
+  /**
+   * nc request wrap
+   * @param subject 
+   * @param headers 
+   * @param invocationInfo 
+   * @returns 
+   */
+  private _execute(
+    subject: string,
+    data: RFCInvocationInfo,
+    headers: MsgHdrs,
+  ) {
+    return this.nc.request(
+      subject,
+      this.codec.encode(data),
+      {
+        headers: headers,
+        timeout: this.timeout,
+      },
+    );
+  }
+
 }
 
 export = NatsRFCService

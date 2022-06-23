@@ -93,15 +93,7 @@ describe("RFC Test Suite", () => {
         },
 
       )
-    ).rejects.toEqual({
-      "code": "SQLITE_ERROR",
-      "errno": 1,
-      "message": "SQLITE_ERROR: no such table: test_app_srv_theosun_PeopleService_NotExistedEntity in: \nSELECT * FROM test_app_srv_theosun_PeopleService_NotExistedEntity ALIAS_1 WHERE Name = ? LIMIT 1",
-      "query": "SELECT * FROM test_app_srv_theosun_PeopleService_NotExistedEntity ALIAS_1 WHERE Name = ? LIMIT 1",
-      "values": [
-        "Theo",
-      ],
-    })
+    ).rejects.toMatchSnapshot()
   });
 
   it('should support update weight by rest api & rfc', async () => {
@@ -139,9 +131,9 @@ describe("RFC Test Suite", () => {
     expect(updatedPeople.Name).toBe(newPeople.Name)
     expect(updatedPeople.Weight).toBe(12.3)
 
-    await expect(() => remotePeopleService.notExistFunction())
-      .rejects
-      .toThrow("method/action/function 'notExistFunction' is not existed on the service 'test.app.srv.theosun.PeopleService'")
+    await expect(() => remotePeopleService.notExistFunction()).
+      rejects.
+      toMatchSnapshot()
 
   });
 

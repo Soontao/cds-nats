@@ -47,7 +47,7 @@ export class NatsMessagingService extends NatsService {
       "subscribe event", def.name,
       "at service", srv.name,
       "with subject", options.target,
-      "mode", options.options?.queue === undefined ? "Publisher/Subscriber" : "Producer/Consumer",
+      "mode", options.options?.queue === undefined ? "Publishe/Subscribe" : "Produce/Consume",
     );
     const sub = this.nc.subscribe(options.target, options.options);
     this
