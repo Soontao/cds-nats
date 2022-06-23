@@ -8,9 +8,8 @@
       "args": [
         "--runInBand"
       ],
+      "outputCapture": "std",
       "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
       "envFile": "${workspaceFolder}/.env",
       "program": "${workspaceFolder}/node_modules/jest/bin/jest"
     }
