@@ -34,13 +34,28 @@ describe("Basic Test Suite", () => {
       data: { peopleID: ID, amount: 99.9 }
     });
 
-    await sleep();
+    await sleep(100);
 
     // verify data should be updated
     response = await axios.get(`/people/People(${ID})`);
     expect(response.status).toBe(200);
     expect(response.data.Amount).toBe(99.9);
     expect(response.data.modifiedBy).toBe("theo sun") // the user id should work
+
+
+    for (let idx = 0; idx < 15; idx++) {
+      const randomValue = Math.round(Math.random() * 100)
+      await sleep(100);
+      // another event
+      await messaging.emit({
+        event: "test.app.srv.theosun.PeopleService.changeAmount",
+        data: { peopleID: ID, amount: randomValue }
+      });
+      response = await axios.get(`/people/People(${ID})`);
+      expect(response.status).toBe(200);
+      expect(response.data.Amount).toBe(randomValue);
+    }
+
   });
 
   it('should support pub/sub mod', async () => {
