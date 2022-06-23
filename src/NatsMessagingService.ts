@@ -1,5 +1,5 @@
 import { ApplicationService, cwdRequireCDS, Definition, Service, TransactionMix } from "cds-internal-tool";
-import { Subscription } from "nats";
+import { Msg, Subscription } from "nats";
 import { FatalError } from "./errors";
 import { NatsService } from "./NatsService";
 import { extractUserAndTenant, toHeader, toNatsHeaders } from "./utils";
@@ -51,45 +51,57 @@ export class NatsMessagingService extends NatsService {
     );
     const sub = this.nc.subscribe(options.target, options.options);
     this
-      ._handleInboundEvent(srv, def, sub)
+      ._handleInboundMessages(srv, def, sub)
       .catch(err => this.logger.error("receive error for subscription", def.name, "error", err));
   }
 
-  private async _handleInboundEvent(srv: ApplicationService, def: Definition, sub: Subscription) {
+  private async _handleInboundMessages(srv: ApplicationService, def: Definition, sub: Subscription) {
     // use the service local event name, otherwise, framework could not found the handlers
     const event = def.name.substring(srv.name.length + 1);
-    const cds = cwdRequireCDS();
     for await (const msg of sub) {
+      await this._handleInboundMessage(msg, def, srv, sub, event);
+    }
+  }
+
+  /**
+   * handle each inbound message
+   * 
+   * @param msg 
+   * @param def 
+   * @param srv 
+   * @param sub 
+   * @param event 
+   */
+  private async _handleInboundMessage(msg: Msg, def: Definition, srv: ApplicationService, sub: Subscription, event: string) {
+    try {
+      const cds = cwdRequireCDS();
+      const data = this.codec.decode(msg.data);
+      const headers = toHeader(msg);
+
+      const { user, tenant, id } = extractUserAndTenant(headers);
+      this.logger.debug(
+        "receive event", def.name,
+        "for service", srv.name,
+        "subject is", sub.getSubject(),
+        "tenant is", tenant
+      );
+      const txSrv: ApplicationService & TransactionMix = cds.context = srv.tx({ tenant, user }) as any;
       try {
-        const data = this.codec.decode(msg.data);
-        const headers = toHeader(msg);
-
-        const { user, tenant, id } = extractUserAndTenant(headers);
-        this.logger.debug(
-          "receive event", def.name,
-          "for service", srv.name,
-          "subject is", sub.getSubject(),
-          "tenant is", tenant,
-        );
-        const txSrv: ApplicationService & TransactionMix = cds.context = srv.tx({ tenant, user }) as any;
-        try {
-          // TODO: retry ?
-          await txSrv.emit(new cds.Event({ event, user, tenant, data, headers, id }));
-          await txSrv.commit();
-        }
-        catch (error) {
-          await txSrv.rollback();
-          this.logger.error(
-            "emit event",
-            def.name,
-            "failed with error",
-            error
-          );
-        }
-      } catch (error) {
-        this.logger.error("process subject", msg.subject, "sid", msg.sid, "failed", error);
+        // TODO: retry ?
+        await txSrv.emit(new cds.Event({ event, user, tenant, data, headers, id }));
+        await txSrv.commit();
       }
-
+      catch (error) {
+        await txSrv.rollback();
+        this.logger.error(
+          "emit event",
+          def.name,
+          "failed with error",
+          error
+        );
+      }
+    } catch (error) {
+      this.logger.error("process subject", msg.subject, "sid", msg.sid, "failed", error);
     }
   }
 
