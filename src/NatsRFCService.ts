@@ -75,8 +75,10 @@ class NatsRFCService extends NatsService {
           );
         }
 
-        // @ts-ignore
-        const tx: ApplicationService & TransactionMix = cds.context = srv.tx({ tenant, user, id, headers });
+        cds.context = undefined as any;
+        const tx: ApplicationService & TransactionMix = cds.context = srv.tx({
+          tenant, user, id, headers
+        } as any) as any;
 
         try {
           // @ts-ignore

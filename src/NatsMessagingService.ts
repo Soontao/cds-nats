@@ -92,8 +92,7 @@ export class NatsMessagingService extends NatsService {
         "subject is", subject,
         "tenant is", tenant
       );
-      // @ts-ignore
-      cds.context = undefined
+      cds.context = undefined as any;
       const txSrv: ApplicationService & TransactionMix = cds.context = srv.tx({ tenant, user }) as any;
       try {
         // TODO: retry ?
