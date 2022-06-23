@@ -149,15 +149,28 @@ export class NatsMessagingService extends NatsService {
 
   private _toSubscribeOption(eventDef: Definition) {
     let queueName = eventDef["@queue"];
-    const topicName = eventDef["@topic"];
+    let topicName = eventDef["@topic"];
 
+    // with both annotation
     if (queueName !== undefined && topicName !== undefined) {
       throw new FatalError(`for event ${eventDef.name}, both @queue and @topic provided, please remove one of them`);
     }
 
+    // without annotation
     if (queueName === undefined && topicName === undefined) {
       queueName = eventDef.name;
     }
+
+    // with empty @queue annotation
+    if (queueName === true) {
+      queueName = eventDef.name
+    }
+
+    // with empty @topic annotation
+    if (topicName === true) {
+      topicName = eventDef.name
+    }
+
     let options: { target: string, options?: any } = undefined as any;
     if (queueName !== undefined) {
       const normalizedQueueName = this._prepareTarget(queueName, true);
