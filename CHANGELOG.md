@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.9.1](https://github.com/Soontao/cds-nats/compare/v2.9.0...v2.9.1) (2022-06-23)
+
+
+### Bug Fixes
+
+* cds.context inherit issue ([5dd368b](https://github.com/Soontao/cds-nats/commit/5dd368b53307e7511ef84852b0186b8092d043a3))
+
 ## [2.9.0](https://github.com/Soontao/cds-nats-messaging/compare/v2.8.1...v2.9.0) (2022-06-23)
 
 
