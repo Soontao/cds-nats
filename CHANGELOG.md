@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.9.0](https://github.com/Soontao/cds-nats-messaging/compare/v2.8.1...v2.9.0) (2022-06-23)
+
+
+### Features
+
+* [#5](https://github.com/Soontao/cds-nats-messaging/issues/5) annotation without value ([4e1c4d7](https://github.com/Soontao/cds-nats-messaging/commit/4e1c4d7a5c4c05521b3e14123b85f3a32df7e6cc))
+* better test for event ([11a24a7](https://github.com/Soontao/cds-nats-messaging/commit/11a24a7d4cdfb55510b732f5247b51157770039a))
+* doc update ([23dae8f](https://github.com/Soontao/cds-nats-messaging/commit/23dae8f5540ece24a4c811f048e7174b3fb8d8b7))
+* extract each msg handler for instrument ([1f27fc1](https://github.com/Soontao/cds-nats-messaging/commit/1f27fc1c2ce353984da8ca774f039d333ca3c2fd))
+
 ### [2.8.1](https://github.com/Soontao/cds-nats-messaging/compare/v2.8.0...v2.8.1) (2022-06-16)
 
 
