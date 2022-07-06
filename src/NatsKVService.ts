@@ -19,7 +19,7 @@ class NatsKVService<V = any> extends NatsService {
 
   protected codec = JSONCodec<V>();
 
-  protected tenantsKV = new Map<string, KV | Promise<KV>>();
+  protected tenantsKV = new Map<string | undefined, KV | Promise<KV>>();
 
   protected ttl = -1;
 
