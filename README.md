@@ -321,6 +321,13 @@ await expect(() => remotePeopleService.notExistFunction())
   - [x] Error handler
   - [ ] Demo Micro Service
 
+## Compatibility Table
+
+| @sap/cds version | cds-mysql version |
+|------------------|-------------------|
+| 5.x              | 2.9.x             |
+| 6.x              | 2.10.x             |
+
 ## [CHANGELOG](./CHANGELOG.md)
 
 ## [LICENSE](./LICENSE)

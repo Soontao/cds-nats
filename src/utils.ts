@@ -90,7 +90,8 @@ export function toNatsHeaders(headers: HeaderObject = {}, event?: string) {
   setIfNotExit("datacontenttype", () => "application/json");
   setIfNotExit("specversion", () => "1.0");
   setIfNotExit("user-class", () => {
-    let className = cds.context?.user?.constructor?.name;
+    // @ts-ignore
+    let className = cds.context?._?.user?.constructor?.name;
     if (className === undefined) className = "Anonymous";
     return className;
   });

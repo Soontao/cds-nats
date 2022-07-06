@@ -48,7 +48,7 @@ describe("RFC Test Suite", () => {
     const rfcService = remoteApp.service("test.app.srv.theosun.PeopleService")
     await expect(() => rfcService.send({ event: "multiErrors", data: { ID: cds.utils.uuid() } }))
       .rejects
-      .toEqual({
+      .toMatchObject({
         details: [
           {
             "message": "400",
