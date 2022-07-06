@@ -3,7 +3,7 @@
   "version": "2.9.1",
   "main": "lib/index.js",
   "engines": {
-    "node": ">=12",
+    "node": ">=14",
     "npm": ">=6"
   },
   "scripts": {
@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@newdash/newdash": "^5.21.2",
-    "cds-internal-tool": "^1.1.2",
+    "cds-internal-tool": "^1.3.0",
     "nats": "^2.7.1"
   },
   "license": "Apache-2.0",

@@ -130,7 +130,7 @@ class NatsRFCService extends NatsService {
       this._toAppQueueGroup(appName),
       invocationInfo,
       toNatsHeaders(),
-    )
+    );
 
     // process error
     if (msg.headers?.get?.("throw") === "true") {

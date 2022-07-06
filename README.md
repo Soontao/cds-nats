@@ -326,7 +326,7 @@ await expect(() => remotePeopleService.notExistFunction())
 | @sap/cds version | cds-mysql version |
 |------------------|-------------------|
 | 5.x              | 2.9.x             |
-| 6.x              | 2.10.x             |
+| 6.x              | 2.10.x            |
 
 ## [CHANGELOG](./CHANGELOG.md)
 

@@ -4,7 +4,7 @@
  */
 module.exports = {
   preset: 'ts-jest',
-  testTimeout: 120 * 1000,
+  testTimeout: 20 * 1000,
   collectCoverageFrom: [
     "src/**/*.ts",
     "!**/node_modules/**"

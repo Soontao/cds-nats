@@ -79,8 +79,8 @@ export function toNatsHeaders(headers: HeaderObject = {}, event?: string) {
 
   const cds = cwdRequireCDS();
 
-  function setIfNotExit(key: string, value: () => string) {
-    if (!msgHeaders.has(key)) msgHeaders.set(key, value());
+  function setIfNotExit(key: string, value: () => string | undefined) {
+    if (!msgHeaders.has(key)) { const v = value(); v && msgHeaders.set(key, v); }
   }
 
   setIfNotExit("id", () => cds.context?.id ?? cds.utils.uuid());
@@ -90,8 +90,7 @@ export function toNatsHeaders(headers: HeaderObject = {}, event?: string) {
   setIfNotExit("datacontenttype", () => "application/json");
   setIfNotExit("specversion", () => "1.0");
   setIfNotExit("user-class", () => {
-    // @ts-ignore
-    let className = cds.context?._?.user?.constructor?.name;
+    let className = (cds.context as any)?._?.user?.constructor?.name;
     if (className === undefined) className = "Anonymous";
     return className;
   });
