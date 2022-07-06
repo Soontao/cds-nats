@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.10.0](https://github.com/Soontao/cds-nats/compare/v2.9.1...v2.10.0) (2022-07-06)
+
+
+### Features
+
+* auto merge for renovate ([048dda9](https://github.com/Soontao/cds-nats/commit/048dda9614889748cfcc7cb797ed1e79686fb022))
+* support cds 6 ([b054ac3](https://github.com/Soontao/cds-nats/commit/b054ac31166d8c6f9e7ce1c80d3f47e02a1a776d))
+
+
+### Bug Fixes
+
+* build ([e22ed5f](https://github.com/Soontao/cds-nats/commit/e22ed5fa01bad7e5416bf8f116094e8b81b02cc3))
+* lint ([2df3f31](https://github.com/Soontao/cds-nats/commit/2df3f31769cd57699fbc0beb3302794b43d7fe9f))
+* lint ([7b0e7c0](https://github.com/Soontao/cds-nats/commit/7b0e7c0b57eb045f9d3bfaf2b7c1e83ccf368bf6))
+
 ### [2.9.1](https://github.com/Soontao/cds-nats/compare/v2.9.0...v2.9.1) (2022-06-23)
 
 
