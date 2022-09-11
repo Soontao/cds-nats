@@ -3,13 +3,13 @@
 exports[`RFC Test Suite should support invoke custom handler by RFCService proxy 1`] = `[Error: method/action/function 'notExistFunction' is not existed on the app service 'test.app.srv.theosun.PeopleService' of app 'demo-app-micro-service']`;
 
 exports[`RFC Test Suite should support throw remote service reported error 1`] = `
-Object {
+{
   "code": "SQLITE_ERROR",
   "errno": 1,
   "message": "SQLITE_ERROR: no such table: test_app_srv_theosun_PeopleService_NotExistedEntity in: 
 SELECT * FROM test_app_srv_theosun_PeopleService_NotExistedEntity ALIAS_1 WHERE Name = ? LIMIT 1",
   "query": "SELECT * FROM test_app_srv_theosun_PeopleService_NotExistedEntity ALIAS_1 WHERE Name = ? LIMIT 1",
-  "values": Array [
+  "values": [
     "Theo",
   ],
 }
