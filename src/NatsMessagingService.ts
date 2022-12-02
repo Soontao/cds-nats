@@ -1,4 +1,4 @@
-import { ApplicationService, cwdRequireCDS, Definition, Service, TransactionMix } from "cds-internal-tool";
+import { ApplicationService, cwdRequireCDS, Definition, Service } from "cds-internal-tool";
 import { Msg, MsgHdrs, Subscription } from "nats";
 import { FatalError } from "./errors";
 import { NatsService } from "./NatsService";
@@ -93,15 +93,12 @@ export class NatsMessagingService extends NatsService<NatsMessagingServiceOption
         "subject is", subject,
         "tenant is", tenant
       );
-      cds.context = undefined as any;
-      const txSrv: ApplicationService & TransactionMix = cds.context = srv.tx({ tenant, user }) as any;
       try {
-        // TODO: retry ?
-        await txSrv.emit(new cds.Event({ event, user, tenant, data, headers, id }));
-        await txSrv.commit();
+        await srv.tx({ tenant, user }, async (tx) => {
+          await tx.emit(new cds.Event({ event, user, tenant, data, headers, id }));
+        });
       }
       catch (error) {
-        await txSrv.rollback();
         this.logger.error(
           "emit event",
           def.name,

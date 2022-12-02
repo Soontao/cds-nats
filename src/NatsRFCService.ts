@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { ApplicationService, cwdRequireCDS, TransactionMix } from "cds-internal-tool";
+import { cwdRequireCDS } from "cds-internal-tool";
 import { Msg, MsgHdrs, Subscription } from "nats";
 import path from "path";
 import process from "process";
@@ -8,8 +8,6 @@ import { NatsService } from "./NatsService";
 import { NatsRFCServiceOptions, RFCInvocationInfo, RFCService } from "./types";
 import { createNatsHeaders, extractUserAndTenant, toHeader, toNatsHeaders } from "./utils";
 
-
-// TODO: single instance validation
 
 /**
  * NatsRFCService
@@ -63,7 +61,7 @@ class NatsRFCService extends NatsService<NatsRFCServiceOptions> {
     const cds = cwdRequireCDS();
     try {
       const event: RFCInvocationInfo = this.codec.decode(msg.data);
-      const headers = toHeader(msg);
+      const headers = toHeader(msg) as any;
       const { serviceName, methodName, args } = event;
 
       if (serviceName === undefined) {
@@ -86,21 +84,11 @@ class NatsRFCService extends NatsService<NatsRFCServiceOptions> {
         );
       }
 
-      cds.context = undefined as any;
-      const tx: ApplicationService & TransactionMix = cds.context = srv.tx({
-        tenant, user, id, headers
-      } as any) as any;
-
-      try {
-        // @ts-ignore
-        const response = await tx[methodName](...args);
-        await tx.commit();
+      await srv.tx({ tenant, user, id, headers } as any, async (tx) => {
+        const response = await (tx as any)[methodName](...args);
         msg.respond(this.codec.encode(response));
-      }
-      catch (error) {
-        await tx.rollback();
-        throw error;
-      }
+      });
+
     }
     catch (error) {
       this.logger.error("process subject", msg.subject, "sid", msg.sid, "failed", error);
