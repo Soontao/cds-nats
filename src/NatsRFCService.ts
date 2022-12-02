@@ -5,7 +5,7 @@ import path from "path";
 import process from "process";
 import { RFCError } from "./errors";
 import { NatsService } from "./NatsService";
-import { RFCInvocationInfo, RFCService } from "./types";
+import { NatsRFCServiceOptions, RFCInvocationInfo, RFCService } from "./types";
 import { createNatsHeaders, extractUserAndTenant, toHeader, toNatsHeaders } from "./utils";
 
 
@@ -16,7 +16,7 @@ import { createNatsHeaders, extractUserAndTenant, toHeader, toNatsHeaders } from
  * 
  * enable RFC/RPC capability for CAP/Nats
  */
-class NatsRFCService extends NatsService {
+class NatsRFCService extends NatsService<NatsRFCServiceOptions> {
 
   /**
    * the app name of current app

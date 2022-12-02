@@ -1,6 +1,40 @@
 import { ApplicationService } from "cds-internal-tool";
+import type { ConnectionOptions } from "nats";
 
 export type ValueProvider<T> = (key: string) => Promise<T> | T
+
+export type NatsServiceOptions = ConnectionOptions
+
+export interface NatsMessagingServiceOptions extends NatsServiceOptions {
+  publishPrefix?: string;
+  subscribePrefix?: string;
+}
+
+export interface NatsKVServiceOptions extends NatsServiceOptions {
+  ttl?: number;
+  bucket?: string;
+}
+
+export interface NatsLockServiceOptions extends NatsKVServiceOptions {
+  check?: {
+    interval?: number;
+  };
+  lock?: {
+    acquire?: number;
+    timeout?: number;
+  };
+}
+
+export interface NatsRFCServiceOptions extends NatsServiceOptions {
+  prefix?: string;
+  app?: {
+    name?: string
+  };
+  invoke?: {
+    timeout?: number;
+  };
+}
+
 export interface HeaderObject {
 
   id?: string;

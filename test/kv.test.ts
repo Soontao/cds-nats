@@ -11,8 +11,8 @@ describe("KV Test Suite", () => {
 
   afterEach(async () => {
     const cds = cwdRequireCDS();
-    const kv = await cds.connect.to("kv") as NatsKVService;
-    const kv5000 = await cds.connect.to("kv5000") as NatsKVService;
+    const kv = await cds.connect.to("kv") as any as NatsKVService;
+    const kv5000 = await cds.connect.to("kv5000") as any as NatsKVService;
     await kv.removeAll()
     await kv5000.removeAll()
   })
@@ -26,7 +26,7 @@ describe("KV Test Suite", () => {
   it('should support connect to kv service', async () => {
     const NatsKVService = require("../src/NatsKVService");
     const cds = cwdRequireCDS();
-    const kv = await cds.connect.to("kv") as NatsKVService;
+    const kv = await cds.connect.to("kv") as any as NatsKVService;
     expect(kv).toBeInstanceOf(NatsKVService)
 
     const id = cds.utils.uuid()
@@ -55,17 +55,17 @@ describe("KV Test Suite", () => {
 
   it('should support ttl of values', async () => {
     const cds = cwdRequireCDS();
-    const kv = await cds.connect.to("kv") as NatsKVService;
+    const kv = await cds.connect.to("kv") as any as NatsKVService;
     const id = cds.utils.uuid()
     await kv.set(id, "v1")
     expect(await kv.get(id)).toBe("v1")
-    await sleep(101) 
+    await sleep(101)
     expect(await kv.get(id)).toBeNull()
   });
 
   it('should support connect to multi instance', async () => {
     const cds = cwdRequireCDS();
-    const kv5000 = await cds.connect.to("kv5000") as NatsKVService;
+    const kv5000 = await cds.connect.to("kv5000") as any as NatsKVService;
     expect(kv5000).not.toBeUndefined() // ttl of kv is 5000
 
     const id = cds.utils.uuid()
@@ -77,7 +77,7 @@ describe("KV Test Suite", () => {
 
   it('should support set value after removeAll', async () => {
     const cds = cwdRequireCDS();
-    const kv5000 = await cds.connect.to("kv5000") as NatsKVService;
+    const kv5000 = await cds.connect.to("kv5000") as any as NatsKVService;
     await kv5000.removeAll()
     const id = cds.utils.uuid()
     await kv5000.set(id, "v3")

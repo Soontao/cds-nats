@@ -94,7 +94,11 @@ export function toNatsHeaders(headers: HeaderObject = {}, event?: string) {
     if (className === undefined) className = "Anonymous";
     return className;
   });
-  setIfNotExit("user-attributes", () => JSON.stringify(cds.context?.user ?? "{}"));
+  setIfNotExit("user-attributes", () => JSON.stringify({
+    id: cds.context?.user?.id,
+    roles: (cds.context?.user as any)?.roles,
+    attr: cds.context?.user?.attr,
+  }));
   if (cds.context?.tenant !== undefined) {
     setIfNotExit("tenant", () => cds.context?.tenant);
   }

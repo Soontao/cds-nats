@@ -5,6 +5,7 @@ import { NatsError, StringCodec } from "nats";
 import { KvEntry } from "nats/lib/nats-base-client/types";
 import { LockTimeoutError } from "./errors";
 import NatsKVService from "./NatsKVService";
+import { NatsLockServiceOptions } from "./types";
 import { sleep } from "./utils";
 
 const DEFAULT_LOCK_CHECK_INTERVAL = 100;
@@ -22,7 +23,7 @@ const DEFAULT_LOCK_RESOURCE_TIMEOUT = 60 * 60 * 1000; // default resource could 
  * 
  * @beta because Nats jetstream KV is beta status
  */
-class NatsLockService extends NatsKVService<string> {
+class NatsLockService extends NatsKVService<NatsLockServiceOptions, string> {
 
   private lockCheckInterval!: number;
 

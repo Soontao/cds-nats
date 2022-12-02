@@ -1,11 +1,13 @@
-import { cwdRequireCDS, Logger } from "cds-internal-tool";
+/* eslint-disable max-len */
+import { cwdRequireCDS, EventNames, Logger } from "cds-internal-tool";
 import { connect as connectNats, JSONCodec, NatsConnection } from "nats";
+import { NatsServiceOptions } from "./types";
 
 
 /**
  * Nats Base Service
  */
-export abstract class NatsService extends cwdRequireCDS().Service {
+export abstract class NatsService<O extends NatsServiceOptions = NatsServiceOptions> extends cwdRequireCDS().Service<EventNames, O> {
 
   protected nc!: NatsConnection;
 

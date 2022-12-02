@@ -19,7 +19,7 @@ describe("RFC Test Suite", () => {
 
   it('should support connect to RFC Service', async () => {
     const cds = cwdRequireCDS()
-    const messaging = await cds.connect.to("rfc") as NatsRFCService
+    const messaging = await cds.connect.to("rfc") as any as NatsRFCService
     expect(messaging).toBeInstanceOf(require("../src/NatsRFCService"))
     expect(messaging['appName']).toBe("demo-app-micro-service")
   });
@@ -28,7 +28,7 @@ describe("RFC Test Suite", () => {
   it('should support call remote msg with information', async () => {
     const cds = cwdRequireCDS()
     const { SELECT } = cds.ql
-    const messaging = await cds.connect.to("rfc") as NatsRFCService
+    const messaging = await cds.connect.to("rfc") as any as NatsRFCService
     const result = await messaging.execute(
       "demo-app-micro-service",
       {
@@ -43,7 +43,7 @@ describe("RFC Test Suite", () => {
 
   it('should support trigger native errors', async () => {
     const cds = cwdRequireCDS()
-    const messaging = await cds.connect.to("rfc") as NatsRFCService
+    const messaging = await cds.connect.to("rfc") as any as NatsRFCService
     const remoteApp = messaging.app("demo-app-micro-service");
     const rfcService = remoteApp.service("test.app.srv.theosun.PeopleService")
     await expect(() => rfcService.send({ event: "multiErrors", data: { ID: cds.utils.uuid() } }))
@@ -67,7 +67,7 @@ describe("RFC Test Suite", () => {
   it('should support shortcut of execute', async () => {
     const cds = cwdRequireCDS()
     const { SELECT, INSERT } = cds.ql
-    const messaging = await cds.connect.to("rfc") as NatsRFCService
+    const messaging = await cds.connect.to("rfc") as any as NatsRFCService
     const remoteApp = messaging.app("demo-app-micro-service");
     const rfcService = remoteApp.service("test.app.srv.theosun.PeopleService")
     const result = await rfcService.run(SELECT.one.from("People").where({ Name: "Theo" }))
@@ -80,7 +80,7 @@ describe("RFC Test Suite", () => {
   it('should support throw remote service reported error', async () => {
     const cds = cwdRequireCDS()
     const { SELECT } = cds.ql
-    const messaging = await cds.connect.to("rfc") as NatsRFCService
+    const messaging = await cds.connect.to("rfc") as any as NatsRFCService
     await expect(
       () => messaging.execute(
         "demo-app-micro-service",
@@ -104,7 +104,7 @@ describe("RFC Test Suite", () => {
     response = await axios.post("/people/updateWeight", { ID: newPeopleId, Weight: 99.9 })
     expect(response.status).toBe(200)
     expect(response.data.Name).toBe(newPeopleName)
-    const messaging = await cds.connect.to("rfc") as NatsRFCService
+    const messaging = await cds.connect.to("rfc") as any as NatsRFCService
     const updatedData = await messaging.execute(
       "demo-app-micro-service",
       {
@@ -119,7 +119,7 @@ describe("RFC Test Suite", () => {
   it('should support invoke custom handler by RFCService proxy', async () => {
     const cds = cwdRequireCDS()
     const { INSERT } = cds.ql
-    const messaging = await cds.connect.to("rfc") as NatsRFCService
+    const messaging = await cds.connect.to("rfc") as any as NatsRFCService
     const remoteApp = messaging.app("demo-app-micro-service");
     const remotePeopleService = remoteApp.service("test.app.srv.theosun.PeopleService")
     const newPeople = await remotePeopleService.run(

@@ -2,7 +2,7 @@ import { cwdRequireCDS } from "cds-internal-tool";
 import { JSONCodec } from "nats";
 import { KV, KvEntry, KvOptions } from "nats/lib/nats-base-client/types";
 import { NatsService } from "./NatsService";
-import { ValueProvider } from "./types";
+import { NatsKVServiceOptions, ValueProvider } from "./types";
 
 const DEFAULT_OPTIONS: Partial<KvOptions> = { history: 1 };
 
@@ -15,7 +15,7 @@ const DEFAULT_OPTIONS: Partial<KvOptions> = { history: 1 };
  * @beta because Nats jetstream KV is beta status
  * 
  */
-class NatsKVService<V = any> extends NatsService {
+class NatsKVService<O extends NatsKVServiceOptions = NatsKVServiceOptions, V = any> extends NatsService<O> {
 
   protected codec = JSONCodec<V>();
 
@@ -42,7 +42,6 @@ class NatsKVService<V = any> extends NatsService {
       const options = Object.assign(
         {},
         DEFAULT_OPTIONS,
-        this.options?.options ?? {}
       );
       this.logger.debug(
         "connecting to nats kv bucket",

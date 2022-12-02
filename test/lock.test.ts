@@ -21,7 +21,7 @@ describe('Lock Service Test Suite', () => {
     const NatsKVService = require("../src/NatsKVService");
     const NatsLockService = require("../src/NatsLockService");
     const cds = cwdRequireCDS();
-    const lock = await cds.connect.to("lock") as NatsLockService;
+    const lock = await cds.connect.to("lock") as any as NatsLockService;
     expect(lock).toBeInstanceOf(NatsKVService)
     expect(lock).toBeInstanceOf(NatsLockService)
     expect(lock['lockDefaultAcquireTimeout']).toBe(10000)
@@ -32,7 +32,7 @@ describe('Lock Service Test Suite', () => {
   it('should support lock/unlock the resource', async () => {
 
     const cds = cwdRequireCDS();
-    const lock = await cds.connect.to("lock") as NatsLockService;
+    const lock = await cds.connect.to("lock") as any as NatsLockService;
     const k = cds.utils.uuid()
     let unlock = await lock.lock(k)
     await unlock()
@@ -43,7 +43,7 @@ describe('Lock Service Test Suite', () => {
 
   it('should support throw error when acquire timeout', async () => {
     const cds = cwdRequireCDS();
-    const lock = await cds.connect.to("lock") as NatsLockService;
+    const lock = await cds.connect.to("lock") as any as NatsLockService;
     const k = cds.utils.uuid()
     await lock.lock(k)
     await expect(() => lock.lock(k, 500)).rejects.toThrow(LockTimeoutError)
@@ -52,7 +52,7 @@ describe('Lock Service Test Suite', () => {
   it('should support determine remote lock timeout', async () => {
     const cds = cwdRequireCDS();
     // the remote lock will be forced unlocked after 1 seconds
-    const lock = await cds.connect.to("lock1000") as NatsLockService;
+    const lock = await cds.connect.to("lock1000") as any as NatsLockService;
     const k = cds.utils.uuid()
     await lock.lock(k)
     const unlock = await lock.lock(k)
@@ -61,7 +61,7 @@ describe('Lock Service Test Suite', () => {
 
   it('should support concurrency check test 100', async () => {
     const cds = cwdRequireCDS();
-    const lock = await cds.connect.to("lock") as NatsLockService;
+    const lock = await cds.connect.to("lock") as any as NatsLockService;
     let value = 0
 
     const asyncOp = async () => {
@@ -80,7 +80,7 @@ describe('Lock Service Test Suite', () => {
 
   it('should support synchronized method', async () => {
     const cds = cwdRequireCDS();
-    const lock = await cds.connect.to("lock") as NatsLockService;
+    const lock = await cds.connect.to("lock") as any as NatsLockService;
     let value = 0
 
     await Promise.all(Array(50).fill(0).map(() => lock.synchronized("asyncOp2", async () => {

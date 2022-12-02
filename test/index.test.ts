@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import { cwdRequireCDS, setupTest } from "cds-internal-tool";
-import type { NatsMessagingService } from "../src/NatsMessagingService";
 import { afterAllThings, beforeAllSetup, sleep } from "./utils";
 
 describe("Basic Test Suite", () => {
@@ -19,14 +18,14 @@ describe("Basic Test Suite", () => {
   });
 
   it("should support publish event and process it (producer/consumer)", async () => {
-    const messaging = await cds.connect.to("messaging") as NatsMessagingService;
+    const messaging = await cds.connect.to("messaging")
     expect(messaging).toBeInstanceOf(require("../src/index"));
     const ID = cds.utils.uuid();
 
     let response = await axios.post("/people/People", { ID, Amount: 1 });
     expect(response.status).toBe(201);
 
-    // @ts-ignore
+    cds.context = undefined
     cds.context = { tenant: "tenant-1", user: new cds.User({ id: "theo sun" }) };
 
     await messaging.emit({
@@ -59,7 +58,7 @@ describe("Basic Test Suite", () => {
   });
 
   it('should support pub/sub mod', async () => {
-    const messaging = await cds.connect.to("messaging") as NatsMessagingService;
+    const messaging = await cds.connect.to("messaging")
 
     const ID = cds.utils.uuid();
     let response = await axios.post("/people/People", { ID, Amount: 1 });

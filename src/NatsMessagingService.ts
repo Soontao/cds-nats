@@ -2,6 +2,7 @@ import { ApplicationService, cwdRequireCDS, Definition, Service, TransactionMix 
 import { Msg, MsgHdrs, Subscription } from "nats";
 import { FatalError } from "./errors";
 import { NatsService } from "./NatsService";
+import { NatsMessagingServiceOptions } from "./types";
 import { extractUserAndTenant, toHeader, toNatsHeaders } from "./utils";
 
 
@@ -10,7 +11,7 @@ import { extractUserAndTenant, toHeader, toNatsHeaders } from "./utils";
  * 
  * @see ref [NATS is a connective technology that powers modern distributed systems.](https://nats.io/)
  */
-export class NatsMessagingService extends NatsService {
+export class NatsMessagingService extends NatsService<NatsMessagingServiceOptions> {
 
   private registeredEvents = new Set<Definition>();
 

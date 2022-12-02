@@ -40,17 +40,19 @@
           "timeout": 180000
         }
       },
-      "nats": {
-        "impl": "../../src"
-      },
-      "nats-kv": {
-        "impl": "../../src/NatsKVService"
-      },
-      "nats-lock": {
-        "impl": "../../src/NatsLockService"
-      },
-      "nats-rfc": {
-        "impl": "../../src/NatsRFCService"
+      "kinds": {
+        "nats": {
+          "impl": "../../src"
+        },
+        "nats-kv": {
+          "impl": "../../src/NatsKVService"
+        },
+        "nats-lock": {
+          "impl": "../../src/NatsLockService"
+        },
+        "nats-rfc": {
+          "impl": "../../src/NatsRFCService"
+        }
       }
     }
   }
