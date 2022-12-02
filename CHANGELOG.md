@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.10.1](https://github.com/Soontao/cds-nats/compare/v2.10.0...v2.10.1) (2022-12-02)
+
+
+### Bug Fixes
+
+* user lost of mq ([b1984c1](https://github.com/Soontao/cds-nats/commit/b1984c15fe628ae2d1eed4f8c98876ddfe17f667))
+
 ## [2.10.0](https://github.com/Soontao/cds-nats/compare/v2.9.1...v2.10.0) (2022-07-06)
 
 
