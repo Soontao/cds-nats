@@ -43,7 +43,7 @@ jobs:
         run: npm ci
         
       - name: TODO to Issue
-        uses: alstr/todo-to-issue-action@v4.9.3
+        uses: alstr/todo-to-issue-action@v4.10.1
 
       - run: npm run lint
 
